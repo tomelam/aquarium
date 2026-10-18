@@ -58,7 +58,10 @@
           (check "a frame that fails says so in the file" (search "FRAME FAILED" (wait-for path "FRAME FAILED")))
           (setf (aquarium:fish-dx fish) 1)
           (check "and the next frame is good once the mistake is fixed" (search "fish 1" (wait-for path "fish 1"))))
-      (aquarium:stop-aquarium)
+      (progn
+       (aquarium:stop-aquarium)
+       (let ((temp (concatenate 'string path ".tmp")))
+         (when (probe-file temp) (delete-file temp))))
       (when (probe-file path) (delete-file path))))
   ;; the door for Claude
   (check-equal "a form answers with its printed value" (aquarium::eval-request "(+ 1 2)") (format nil "3~%"))
