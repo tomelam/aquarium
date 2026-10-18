@@ -27,7 +27,7 @@ Copies of the ones in `~/lisp-ai/code-as-data/bin/`, as the tree file says; ther
 - `bin/eval '(form)'`: evaluate a form in that image, in package `aquarium`. This is how Claude runs Lisp.
 - `~/lisp-ai/tools/form-edit.lisp`, shared by every project (`(load "~/lisp-ai/tools/form-edit.lisp")`): replace, insert
   or append top-level forms in a file by name, or change one subform inside a form, leaving every other byte as it was.
-  It cannot delete a form. Its tests run in `bin/test` (`tests/shared-test.lisp`).
+  It can delete a form or a subform. Its tests run in `bin/test` (`tests/shared-test.lisp`).
 - `bin/test`: the arbiter. `tests/demo-test.el` is the check of `demo.el`, run by hand with Emacs in batch mode while the
   image is up: `/opt/homebrew/bin/Emacs --batch -Q -l tests/demo-test.el`.
 
