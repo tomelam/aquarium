@@ -2,6 +2,9 @@
 ;;;; setup file. Qlot's cl+ssl hard-codes /opt/homebrew/opt/openssl/lib/libcrypto.dylib, which Homebrew
 ;;;; now points at openssl@4, and OpenSSL 4 removed ASN1_STRING_data. So load Qlot's real setup, then
 ;;;; pin BOTH libraries to openssl@3 (never one of each) before cl+ssl is loaded.
+;;; Qlot's own start-up replaces SBCL's UIOP and prints hundreds of redefinition warnings; mute those about libraries only.
+(load (merge-pathnames "../../tools/quiet-init.lisp" *load-truename*))
+
 (let (*load-verbose*)
   (load (merge-pathnames ".bundle-libs/setup.lisp" #p"/Users/tom/.local/share/qlot/qlot/")))
 (let (*load-verbose*)
