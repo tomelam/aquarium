@@ -26,17 +26,17 @@
                (aquarium:draw (small-tank))
                (let ((nl (string #\Newline)))
                  (concatenate 'string "+----------+" nl "|" (make-string 10 :initial-element #\~) "|" nl
-                              "| ><>      |" nl "|          |" nl "|##########|" nl "+----------+" nl
+                              "| ><(((*>  |" nl "|          |" nl "|##########|" nl "+----------+" nl
                               "tick 0   fish 1" nl)))
   (let ((tank (small-tank)))
     (aquarium:tick tank)
     (check-equal "a tick moves a fish and counts" (list (aquarium:tank-tick tank) (aquarium:fish-x (first (aquarium:tank-fish tank)))) '(1 2)))
   (let* ((tank (aquarium:make-tank :width 10 :height 4))
-         (fish (aquarium:add-fish tank "Bob" :x 7 :y 1 :dx 1)))
+         (fish (aquarium:add-fish tank "Bob" :x 3 :y 1 :dx 1)))
     (aquarium:step-fish fish tank)
-    (check-equal "at the wall a fish turns and stays" (list (aquarium:fish-x fish) (aquarium:fish-dx fish)) '(7 -1))
+    (check-equal "at the wall a fish turns and stays" (list (aquarium:fish-x fish) (aquarium:fish-dx fish)) '(3 -1))
     (aquarium:step-fish fish tank)
-    (check-equal "and swims back" (aquarium:fish-x fish) 6))
+    (check-equal "and swims back" (aquarium:fish-x fish) 2))
   (let ((tank (aquarium:make-tank :width 10 :height 4)))
     (aquarium:add-fish tank "Cy" :x 9 :y 1 :dx 1)
     (check "a fish half out of the tank is cut off, not an error" (search "|         >|" (aquarium:draw tank))))
@@ -73,14 +73,14 @@
          (setf (fdefinition 'aquarium:fish-glyph)
                  (lambda (fish)
                    (if (plusp (aquarium:fish-dx fish))
-                       "><(((*>"
-                       "<*)))><")))
-         (check "a longer glyph reaches the frame" (search "><(((*>" (aquarium:draw (small-tank))))
-         (let* ((tank (aquarium:make-tank :width 10 :height 4)) (fish (aquarium:add-fish tank "Bob" :x 2 :y 1 :dx 1)))
+                       "><(((((*>"
+                       "<*)))))><")))
+         (check "a longer glyph reaches the frame" (search "><(((((*>" (aquarium:draw (small-tank))))
+         (let* ((tank (aquarium:make-tank :width 10 :height 4)) (fish (aquarium:add-fish tank "Bob" :x 0 :y 1 :dx 1)))
            (aquarium:step-fish fish tank)
            (check-equal "the wall is where the longer glyph ends: one step in"
-            (list (aquarium:fish-x fish) (aquarium:fish-dx fish)) '(3 1))
+            (list (aquarium:fish-x fish) (aquarium:fish-dx fish)) '(1 1))
            (aquarium:step-fish fish tank)
-           (check-equal "and there the fish turns" (list (aquarium:fish-x fish) (aquarium:fish-dx fish)) '(3 -1))))
+           (check-equal "and there the fish turns" (list (aquarium:fish-x fish) (aquarium:fish-dx fish)) '(1 -1))))
       (setf (fdefinition 'aquarium:fish-glyph) original))
-    (check-equal "the old glyph is back" (aquarium:fish-glyph (aquarium:make-fish :dx 1)) "><>")))
+    (check-equal "the old glyph is back" (aquarium:fish-glyph (aquarium:make-fish :dx 1)) "><(((*>")))

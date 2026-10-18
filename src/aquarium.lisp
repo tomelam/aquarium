@@ -12,15 +12,17 @@
 (declaim (notinline fish-glyph step-fish tick add-fish seed-tank put-text draw write-frame))
 
 (defun fish-glyph (fish)
-  "What a fish looks like, by the way it is swimming."
-  (if (plusp (fish-dx fish)) "><>" "<><"))
+  (if (plusp (fish-dx fish))
+      "><(((*>"
+      "<*)))><"))
 
 (defun step-fish (fish tank)
-  "Move FISH one step; at a wall it turns round."
+  "Move FISH one step; at a wall it turns round. It also drifts up or down, or stays on its row."
   (let ((next (+ (fish-x fish) (fish-dx fish))))
     (if (<= 0 next (- (tank-width tank) (length (fish-glyph fish))))
         (setf (fish-x fish) next)
-        (setf (fish-dx fish) (- (fish-dx fish))))))
+        (setf (fish-dx fish) (- (fish-dx fish))))
+    (setf (fish-y fish) (max 1 (min (- (tank-height tank) 2) (+ (fish-y fish) (- (random 3) 1)))))))
 
 (defun tick (tank)
   "Advance TANK by one frame."

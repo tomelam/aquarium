@@ -41,6 +41,7 @@ Copies of the ones in `~/lisp-ai/code-as-data/bin/`, as the tree file says; ther
 
 ## Replaying the demo
 
-`run/aquarium-original.lisp` is the source before the demo changed it. To start over: `bin/lisp-server stop`, copy it
-over `src/aquarium.lisp`, `bin/lisp-server start`. Once the project is committed, `git checkout src/aquarium.lisp`
-does the same and the copy can go.
+The first commit holds the source as the demo starts (fish are `><>`); the second holds the result of the seven steps.
+To start over: `bin/lisp-server stop`, `git checkout <first commit> -- src/aquarium.lisp`, `bin/lisp-server start`.
+`bin/test` is written for the result, so it fails on the starting source. `run/aquarium-original.lisp` is an ignored copy
+of the starting source and can go.
