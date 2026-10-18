@@ -1,0 +1,9 @@
+#!/bin/sh
+# bin/test -- the arbiter: load the tests through Qlot's pinned dist and run ASDF test-op.
+# The loader's redefinition warnings go to run/test.stderr; a load or test error is printed here, on stdout.
+here=$(cd "$(dirname "$0")/.." && pwd)
+cd "$here" && mkdir -p run && exec bin/qlot exec sbcl --noinform --non-interactive \
+  --eval '(asdf:load-asd (truename "aquarium.asd"))' \
+  --eval '(handler-case (progn (asdf:load-system "aquarium" :force t) (asdf:test-system "aquarium/tests"))
+            (error (e) (format t "TEST RUN FAILED: ~a~%" e) (uiop:quit 2)))' \
+  2>run/test.stderr

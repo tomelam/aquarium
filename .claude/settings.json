@@ -1,0 +1,46 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/bin/lisp-server start"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "deny": [
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(sed *)",
+      "Bash(awk *)",
+      "Bash(gawk *)",
+      "Bash(grep *)",
+      "Bash(egrep *)",
+      "Bash(fgrep *)",
+      "Bash(rg *)",
+      "Bash(cut *)",
+      "Bash(sort *)",
+      "Bash(uniq *)",
+      "Bash(wc *)",
+      "Bash(tr *)",
+      "Bash(perl *)",
+      "Bash(python *)",
+      "Bash(python3 *)",
+      "Bash(ruby *)",
+      "Bash(jq *)",
+      "Bash(diff *)",
+      "Bash(column *)",
+      "Bash(paste *)",
+      "Bash(nl *)",
+      "Bash(fold *)",
+      "Bash(fmt *)",
+      "Bash(rev *)",
+      "Bash(tac *)"
+    ]
+  }
+}
