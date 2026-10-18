@@ -35,12 +35,13 @@ case "$1" in
     if [ -f "$pidfile" ]; then
       pid=$(cat "$pidfile")
       kill "$pid" 2>/dev/null
-      # wait for it to go: a start straight after a stop must not find the old image still holding the Slynk port
+      # wait for it to go: a start straight after a stop must not find the old image still holding the Slynk port.
+      # SBCL gives its threads up to 60 s to stop after the signal, so a live image can take about that long.
       waited=0
       while kill -0 "$pid" 2>/dev/null; do
         sleep 0.2
         waited=$((waited + 1))
-        if [ "$waited" -ge 50 ]; then echo "lisp-server (pid $pid) did not exit within 10 s" >&2; exit 1; fi
+        if [ "$waited" -ge 350 ]; then echo "lisp-server (pid $pid) did not exit within 70 s" >&2; exit 1; fi
       done
     fi
     rm -f "$socket" "$pidfile"
