@@ -7,12 +7,9 @@
 
 ;;; The editor stays loaded for the life of the image, so changing a file costs no start-up. SCRATCH is where forms are
 ;;; tried before they go to a file; form-edit refuses a form with a symbol of it.
-(asdf/operate:load-system "aquarium/form-edit")
+(load (asdf/system:system-relative-pathname :aquarium "../tools/boot.lisp"))
 
-(load (asdf/system:system-relative-pathname :aquarium "../tools/form-edit.lisp"))
-
-(defpackage :scratch
-  (:use :cl :aquarium))
+(tools-boot:load-tools :aquarium)
 
 ;;; a port already taken must not stop the server coming up
 (handler-case (format t "Slynk listening on port ~d~%" (aquarium:start-slynk))
