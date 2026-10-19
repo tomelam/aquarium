@@ -25,7 +25,7 @@ Copies of the ones in `~/lisp-ai/code-as-data/bin/`, as the tree file says; ther
   exited, so a `start` right after cannot find the old image holding the Slynk port. `start` prints a WARNING on stderr
   (and still exits 0) when Slynk did not come up, because the server is useful without it.
 - `bin/eval '(form)'`: evaluate a form in that image, in package `aquarium`. This is how Claude runs Lisp.
-- `~/lisp-ai/tools/form-edit.lisp`, shared by every project (`(load "~/lisp-ai/tools/form-edit.lisp")`): replace, insert
+- `~/lisp-ai/tools/form-edit.lisp`, shared by every project (`bin/serve.lisp` loads it when the image starts): replace, insert
   or append top-level forms in a file by name, or change one subform inside a form, leaving every other byte as it was.
   It can delete a form or a subform. Its tests run in `bin/test` (`tests/shared-test.lisp`).
 - `bin/test`: the arbiter. `tests/demo-test.el` is the check of `demo.el`, run by hand with Emacs in batch mode while the
