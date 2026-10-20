@@ -13,19 +13,29 @@
 
 (defun eval-request (request)
   "Evaluate the forms in REQUEST in package AQUARIUM; the reply is what they print followed by one printed line per
-   value. Any serious condition, an exhausted stack included, becomes a line starting ERROR: instead of a dead server."
-  (with-output-to-string (reply)
+   value. An error from the socket is held (src/debug.lisp) and answers at once; any other serious condition, an
+   exhausted stack included, becomes a line starting ERROR: instead of a dead server. Returns the reply and, when an
+   error was held, its session (the reply was then kept for DEBUG-RESULT)."
+  (let ((reply (make-string-output-stream)) (*session* nil))
     (handler-case
-        (let ((*package* (find-package :aquarium))
-              (*standard-output* reply)
-              (*error-output* reply))
-          (with-input-from-string (forms request)
-            (loop for form = (read forms nil forms)
-                  until (eq form forms)
-                  do (dolist (value (multiple-value-list (eval form)))
-                       (format reply "~s~%" value)))))
-      (serious-condition (condition)
-        (format reply "ERROR: ~a~%" (condition-text condition))))))
+     (restart-case (handler-bind ((error (lambda (condition) (hold-error condition reply))))
+                     (let ((*package* (find-package :aquarium)) (*standard-output* reply) (*error-output* reply))
+                       (with-input-from-string (forms request)
+                         (loop for form = (read forms nil forms)
+                               until (eq form forms)
+                               do (dolist (value (multiple-value-list (eval form))) (format reply "~s~%" value))))))
+       (abort-request (&optional condition) :report
+        "Unwind the request and reply with the error, as without debugging."
+        (format reply "ERROR: ~a~%" (condition-text (or condition (session-condition *session*))))))
+     (serious-condition (condition) (format reply "ERROR: ~a~%" (condition-text condition))))
+    (let ((text
+           (concatenate 'string
+                        (if *session*
+                            (session-output *session*)
+                            "")
+                        (get-output-stream-string reply))))
+      (when *session* (finish-session *session* text))
+      (values text *session*))))
 
 (defun serve-connection (connection)
   (let ((stream (sb-bsd-sockets:socket-make-stream connection :input t :output t :element-type 'character
@@ -34,9 +44,16 @@
          ;; An error here would end the whole process (--disable-debugger), so none may escape: a client that hung up
          ;; before its reply, a request that is not UTF-8. The reply is lost; the server says so in its log.
          (handler-case
-             (let ((request (read-all stream)))
-               (write-string (eval-request request) stream)
-               (finish-output stream))
+             (let ((request (read-all stream))
+                   (*reply-now*
+                    (lambda (text)
+                      (write-string text stream)
+                      (finish-output stream)
+                      (ignore-errors (close stream))
+                      (ignore-errors (sb-bsd-sockets:socket-close connection)))))
+               (multiple-value-bind (text held)
+                   (eval-request request)
+                 (unless held (write-string text stream) (finish-output stream))))
            (serious-condition (condition)
              (format *error-output* "connection dropped: ~a~%" (condition-text condition))))
       (ignore-errors (close stream))

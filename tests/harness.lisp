@@ -32,6 +32,7 @@
     (let ((*standard-output* (make-broadcast-stream *standard-output* report)))
       (run-aquarium-tests)
       (run-redefinition-tests)
+      (run-debug-tests)
       (run-shared-form-edit)
       (if (zerop *failures*)
           (format t "all checks passed~%")
