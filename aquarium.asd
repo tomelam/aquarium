@@ -5,11 +5,17 @@
   "tools/")
  asdf/system-registry:*central-registry* :test #'equal)
 
+;;; Every build of this project keeps the debugging information SBCL can keep (docs/debug-in-place.md): a function whose last
+;;; act is the failing call keeps its frame, and let variables can be read in the debugger. RESTRICT-COMPILER-POLICY is
+;;; global, for all threads, and survives LOAD, so a request or a Sly session compiles the same way. ASDF does not see a
+;;; policy change: after adding this line, delete the project's compiled files once.
+(sb-ext:restrict-compiler-policy 'debug 3)
+
 (defsystem "aquarium"
   :description "A tank of fish drawn as text, to be changed while it runs."
-  :depends-on ("sb-posix" "sb-bsd-sockets" "slynk")
+  :depends-on ("sb-posix" "sb-bsd-sockets" "sb-concurrency" "slynk")
   :serial t
-  :components ((:module "src" :components ((:file "package") (:file "aquarium") (:file "server") (:file "slynk-server")))))
+  :components ((:module "src" :components ((:file "package") (:file "aquarium") (:file "debug") (:file "server") (:file "slynk-server")))))
 
 (defsystem "aquarium/form-edit" :description
  "What the editor needs: Qlot installs Eclector because a system of this project names it, and lisp-ai-tools is the editor."
@@ -18,5 +24,5 @@
 (defsystem "aquarium/tests"
   :depends-on ("aquarium" "aquarium/form-edit" "uiop")
   :serial t
-  :components ((:module "tests" :components ((:file "harness") (:file "aquarium-test") (:file "shared-test"))))
+  :components ((:module "tests" :components ((:file "harness") (:file "aquarium-test") (:file "debug-test") (:file "shared-test"))))
   :perform (test-op (o c) (symbol-call :aquarium/tests :run)))
