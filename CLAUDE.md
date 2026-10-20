@@ -47,7 +47,12 @@ Copies of the ones in `~/lisp-ai/code-as-data/bin/`, as the tree file says; ther
 
 ## Replaying the demo
 
-The first commit holds the source as the demo starts (fish are `><>`); the second holds the result of the seven steps.
-To start over: `bin/lisp-server stop`, `git checkout <first commit> -- src/aquarium.lisp`, `bin/lisp-server start`.
-`bin/test` is written for the result, so it fails on the starting source. `run/aquarium-original.lisp` is an ignored copy
-of the starting source and can go.
+`master` holds the result of the seven steps. The starting source (fish are `><>`) is `demo/aquarium.lisp`, the file as the
+first commit had it. To start over, evaluate `(reset-demo)` (in `src/demo.lisp`, package `aquarium`). It copies the starting
+source over `src/aquarium.lisp`, loads that file into the image (so every definition the demo changed is the starting one,
+and `M-.` still finds its file), and gives the running tank its first four fish and tick 0, in place: the tank object stays.
+What the file held is first kept in `run/aquarium-before-reset-<date and time>.lisp`, unless it was the starting source
+already. After the demo, `git status` shows `src/aquarium.lisp` as modified when it is not the result: `git restore
+src/aquarium.lisp` brings the result back, and a whole-file `(load ...)` brings it into the image.
+`bin/test` is written for the result, so it fails on the starting source; its `tests/reset-test.lisp` checks the reset in a
+directory of its own, never on `src/`.
