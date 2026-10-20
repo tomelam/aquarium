@@ -1,5 +1,5 @@
 #!/bin/sh
-# bin/eval '(form)' -- evaluate Lisp in the always-on image (package code-as-data) and print the values.
+# bin/eval '(form)' -- evaluate Lisp in the always-on image (in the project's own package) and print the values.
 # A server that is down (a stale socket counts as down) is started with bin/lisp-server first, and stderr says so;
 # a start that fails, or a server that does not answer, is an error on stderr and a non-zero exit.
 here=$(cd "$(dirname "$0")/.." && pwd)

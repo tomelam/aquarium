@@ -18,7 +18,9 @@ loaded in the Emacs, `demo.el` stops and says so: restart Emacs.
 
 ## The tools in `bin/`
 
-Copies of the ones in `~/lisp-ai/code-as-data/bin/`, as the tree file says; there is no shared directory yet.
+Per-project copies of the ones in `~/lisp-ai/code-as-data/bin/`, as the tree file says. `eval`, `qlot` and `qlot-setup.lisp`
+are byte for byte the same in both projects; `lisp-server`, `test` and `serve.lisp` differ. What two projects were found to
+share lives in `~/lisp-ai/tools/` (the editor and `quiet-init.lisp`), not in `bin/`.
 
 - `bin/lisp-server start|stop|status`: the always-on SBCL, which also ticks the tank and listens for Sly where
   `rules/slynk.sexp` says. The SessionStart hook in `.claude/settings.json` starts it. `stop` waits until the process has
