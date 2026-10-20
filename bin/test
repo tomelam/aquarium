@@ -1,13 +1,3 @@
 #!/bin/sh
-# bin/test -- the arbiter: load the tests through Qlot's pinned dist and run ASDF test-op.
-# The loader's redefinition warnings go to run/test.stderr; a load or test error is printed here, on stdout.
-# The compiler's own progress lines are off, so stdout holds only what needs reading.
-# --userinit mutes redefinition warnings about libraries only (UIOP, ASDF, Slynk, Eclector): ../tools/quiet-init.lisp.
-here=$(cd "$(dirname "$0")/.." && pwd)
-[ -f "$here/../tools/quiet-init.lisp" ] || { echo "bin/test: $here/../tools/quiet-init.lisp is missing (the tree's tools)" >&2; exit 1; }
-cd "$here" && mkdir -p run && exec bin/qlot exec sbcl --noinform --userinit "$here/../tools/quiet-init.lisp" --non-interactive \
-  --eval '(asdf:load-asd (truename "aquarium.asd"))' \
-  --eval '(let ((*compile-verbose* nil) (*compile-print* nil) (*load-verbose* nil))
-            (handler-case (progn (asdf:load-system "aquarium" :force t) (asdf:test-system "aquarium/tests"))
-              (error (e) (format t "TEST RUN FAILED: ~a~%" e) (uiop:quit 2))))' \
-  2>run/test.stderr
+# bin/test -- the arbiter: this project's tests, run through Qlot's pinned dist. The work is done by ../../tools/test.
+exec "$(dirname "$0")/../../tools/test" "$(cd "$(dirname "$0")/.." && pwd)" "$@"
