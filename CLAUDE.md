@@ -18,9 +18,10 @@ loaded in the Emacs, `demo.el` stops and says so: restart Emacs.
 
 ## The tools in `bin/`
 
-Per-project copies of the ones in `~/lisp-ai/code-as-data/bin/`, as the tree file says. `eval`, `qlot` and `qlot-setup.lisp`
-are byte for byte the same in both projects; `lisp-server`, `test` and `serve.lisp` differ. What two projects were found to
-share lives in `~/lisp-ai/tools/` (the editor and `quiet-init.lisp`), not in `bin/`.
+`bin/eval`, `bin/lisp-server`, `bin/test` and `bin/qlot` are wrappers of two or three lines, the same in every project:
+the work is done by the scripts of the same names in `~/lisp-ai/tools/`, which are told the project's directory (its name
+is the name of that directory). Only `bin/serve.lisp`, what this image does besides answering on `run/lisp.sock`, is the
+project's own; its first line loads `tools/serve-prelude.lisp`.
 
 - `bin/lisp-server start|stop|status`: the always-on SBCL, which also ticks the tank and listens for Sly where
   `rules/slynk.sexp` says. The SessionStart hook in `.claude/settings.json` starts it. `stop` waits until the process has
@@ -32,7 +33,7 @@ share lives in `~/lisp-ai/tools/` (the editor and `quiet-init.lisp`), not in `bi
   `(debug-locals n frame)`, `(debug-eval n frame 'form)`, redefine the broken function, `(debug-restart-frame n frame)`,
   `(debug-invoke n restart-number args...)`, `(debug-abandon n)`. The finished reply comes back from the last of these.
   Design, limits and what is untested: `docs/debug-in-place.md`.
-- `~/lisp-ai/tools/form-edit.lisp`, shared by every project (`bin/serve.lisp` loads it when the image starts): replace, insert
+- `~/lisp-ai/tools/form-edit.lisp`, shared by every project (`tools/serve-prelude.lisp` loads it when the image starts): replace, insert
   or append top-level forms in a file by name, or change one subform inside a form, leaving every other byte as it was.
   It can delete a form or a subform. Its tests run in `bin/test` (`tests/shared-test.lisp`).
 - `bin/test`: the arbiter. `tests/demo-test.el` is the check of `demo.el`, run by hand with Emacs in batch mode while the

@@ -1,4 +1,3 @@
 #!/bin/sh
-# bin/qlot -- run Qlot with cl+ssl pinned to Homebrew's openssl@3; why: bin/qlot-setup.lisp.
-here=$(cd "$(dirname "$0")" && pwd)
-QLOT_SETUP_FILE="$here/qlot-setup.lisp" exec "$HOME/.qlot/bin/qlot" "$@"
+# bin/qlot -- run Qlot with cl+ssl pinned to Homebrew's openssl@3. The work is done by ../../tools/qlot.
+exec "$(dirname "$0")/../../tools/qlot" "$@"
