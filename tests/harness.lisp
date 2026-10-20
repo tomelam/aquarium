@@ -33,6 +33,7 @@
       (run-aquarium-tests)
       (run-redefinition-tests)
       (run-debug-tests)
+      (run-reset-tests)
       (run-shared-form-edit)
       (if (zerop *failures*)
           (format t "all checks passed~%")

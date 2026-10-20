@@ -5,6 +5,8 @@ rehearsed in a scratch image on a copy of the source before the first one is sho
 
 **Before step 1 (Tom):** `M-x load-file RET ~/lisp-ai/aquarium/demo.el RET`, `M-x aquarium-demo`. Fish swim in the tank
 window. Do not edit the source buffer by hand during the demo: Emacs reverts it whenever Claude writes the file.
+**To start over at any time:** evaluate `(reset-demo)` in the REPL. The source window shows the starting file and the tank
+its first four fish; see "Replaying the demo" in `CLAUDE.md`.
 
 | # | Claude does | Tom watches | Shows |
 |---|---|---|---|
