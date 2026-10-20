@@ -1,6 +1,7 @@
 # Debug in place: design (2026-10-20)
 
-Status: **built in `aquarium` on branch `debug-in-place`, 2026-10-20; not merged, not yet in the running image.** Tom
+Status: **built in `aquarium` (branch `debug-in-place`, merged into `master` and pushed, 2026-10-20) and loaded in place into
+the running image the same day; not yet tried from a cold restart.** Tom
 approved all five decisions the same day; "How they ended" says where the build differs from the proposal. The prototype
 is in `run/debug-prototype/` (ignored by git; its `README.txt` says how to rerun it). `code-as-data` has none of this yet.
 
@@ -153,4 +154,9 @@ internal to Slynk, so a Slynk update could change them; the Qlot lock file pins 
 - Two `bin/eval` calls overlapping while Claude's sandbox waits (each call is its own connection; tried one at a time).
 - The 300 s timeout itself (only 1 and 2 s were tried).
 - A held thread inside code that takes a lock (prototype only).
-- Whether the demo tank keeps ticking while a session is held (the tick runs in its own thread; not looked at).
+- A cold start of the image with all of this: the compiled files must be deleted once before it, and the check that a
+  tank function then shows its `let` variables has not been made. The running image was loaded in place, so its tank
+  functions, compiled earlier, are still at `debug 1`.
+
+Tried on 2026-10-20 in the running image, in place: the whole scenario with scratch functions, and the tank kept ticking
+while a session was held (tick 72274, then 72277 three seconds later).
