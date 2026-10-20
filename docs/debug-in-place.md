@@ -1,9 +1,31 @@
 # Debug in place: design (2026-10-20)
 
-Status: **built in `aquarium` (branch `debug-in-place`, merged into `master` and pushed, 2026-10-20) and loaded in place into
-the running image the same day; not yet tried from a cold restart.** Tom
-approved all five decisions the same day; "How they ended" says where the build differs from the proposal. The prototype
-is in `run/debug-prototype/` (ignored by git; its `README.txt` says how to rerun it). `code-as-data` has none of this yet.
+Status: **built in `aquarium` (merged into `master` and pushed, 2026-10-20), then moved to `~/lisp-ai/tools/debug.lisp`
+(system `lisp-ai-tools/debug`, package `lisp-ai-debug`) and used by `aquarium` and `code-as-data` alike (branch
+`shared-debug`, 2026-10-20).** The running aquarium image was loaded in place with the first version, before the move,
+and has not been restarted since. Tom approved all five decisions the same day; "How they ended" says where the build
+differs from the proposal. The prototype is in `run/debug-prototype/` (ignored by git; its `README.txt` says how to rerun
+it). Where this document says `src/debug.lisp` or `src/server.lisp`, read `tools/debug.lisp` (the commands, the hold) and
+each project's `src/server.lisp` (`eval-request` is one call of `eval-with-debugging`; `serve-connection` binds
+`*reply-now*`). The commands are in package `lisp-ai-debug`, which each project's package uses.
+
+## Two faults the port found (2026-10-20)
+
+- **A resumed thunk that comes back.** `debug-restart-frame` on a frame that cannot be restarted (an SBCL function such as
+  `REDUCE`, which has no debug tag) made the thunk return instead of unwinding. The session stayed `:running` for good and
+  every command said "not waiting". Now the session is held again, with `;; not resumed: Cannot restart frame: ...` in
+  front of its report.
+- **Restarting a frame after an error signalled by a trap ends the image.** A type error, an unbound variable, an
+  undefined function or a wrong argument count is signalled by the machine (a trap), not by a call of `error`. After it,
+  `restart-frame` works and the request finishes with the right answer; then the thread's end raises the original error
+  again, with garbage arguments, unhandled. With `--disable-debugger` the whole image quits (once with a memory fault and
+  "maximum interrupt nesting depth exceeded"). Reproduced in a plain SBCL with Slynk and none of this code, in a thread (in
+  the main thread nothing happened in the cases tried). `error` and division by zero are not affected, nor is leaving by
+  a restart, which is a throw (tried with a plain `throw` out of the handler). SBCL marks a frame that a trap interrupted
+  as "escaped" (`sb-di::compiled-frame-escaped`); `trapped-p` looks for one and the session remembers it. The report then
+  carries a `NOTE`, and `debug-restart-frame` is refused with an explanation. Sly's own restart-frame command calls the
+  same Slynk function and would probably be affected in the same way; that was not tried. The cause inside SBCL was not
+  found.
 
 ## Why
 
@@ -154,9 +176,11 @@ internal to Slynk, so a Slynk update could change them; the Qlot lock file pins 
 - Two `bin/eval` calls overlapping while Claude's sandbox waits (each call is its own connection; tried one at a time).
 - The 300 s timeout itself (only 1 and 2 s were tried).
 - A held thread inside code that takes a lock (prototype only).
-- A cold start of the image with all of this: the compiled files must be deleted once before it, and the check that a
-  tank function then shows its `let` variables has not been made. The running image was loaded in place, so its tank
-  functions, compiled earlier, are still at `debug 1`.
+- A cold start of the real images with all of this (the compiled files must be deleted once before it). Cold starts from
+  clean clones were made for both projects on 2026-10-20 and the tests and scenarios pass there. The running aquarium
+  image was loaded in place with the first version, so its functions compiled earlier are still at `debug 1`.
+- Whether leaving by a restart that the code itself establishes is safe after a trap error in every case (only the
+  abandon restart and a plain `throw` were tried).
 
 Tried on 2026-10-20 in the running image, in place: the whole scenario with scratch functions, and the tank kept ticking
 while a session was held (tick 72274, then 72277 three seconds later).

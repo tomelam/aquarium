@@ -13,9 +13,9 @@
 
 (defsystem "aquarium"
   :description "A tank of fish drawn as text, to be changed while it runs."
-  :depends-on ("sb-posix" "sb-bsd-sockets" "sb-concurrency" "slynk" "uiop")
+  :depends-on ("sb-posix" "sb-bsd-sockets" "lisp-ai-tools/debug" "slynk" "uiop")
   :serial t
-  :components ((:module "src" :components ((:file "package") (:file "aquarium") (:file "demo") (:file "debug") (:file "server") (:file "slynk-server")))))
+  :components ((:module "src" :components ((:file "package") (:file "aquarium") (:file "demo") (:file "server") (:file "slynk-server")))))
 
 (defsystem "aquarium/form-edit" :description
  "What the editor needs: Qlot installs Eclector because a system of this project names it, and lisp-ai-tools is the editor."
@@ -24,5 +24,5 @@
 (defsystem "aquarium/tests"
   :depends-on ("aquarium" "aquarium/form-edit" "uiop")
   :serial t
-  :components ((:module "tests" :components ((:file "harness") (:file "aquarium-test") (:file "debug-test") (:file "reset-test") (:file "shared-test"))))
+  :components ((:module "tests" :components ((:file "harness") (:file "aquarium-test") (:file "reset-test") (:file "shared-test"))))
   :perform (test-op (o c) (symbol-call :aquarium/tests :run)))
