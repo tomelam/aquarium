@@ -12,6 +12,7 @@
 (declaim (notinline fish-glyph step-fish tick add-fish seed-tank put-text draw write-frame))
 
 (defun fish-glyph (fish)
+  "What a fish looks like. By the way, it is swimming."
   (if (plusp (fish-dx fish))
       "><(((*>"
       "<*)))><"))
