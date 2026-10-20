@@ -32,6 +32,8 @@ project's own; its first line loads `tools/serve-prelude.lisp`.
   failing thread waits (4 at most, 300 s each). Then work on it as a Lisp programmer does, with requests of their own:
   `(debug-locals n frame)`, `(debug-eval n frame 'form)`, redefine the broken function, `(debug-restart-frame n frame)`,
   `(debug-invoke n restart-number args...)`, `(debug-abandon n)`. The finished reply comes back from the last of these.
+  The code is shared (`~/lisp-ai/tools/debug.lisp`). `debug-restart-frame` is refused after an error signalled by a trap
+  (type error, unbound variable, undefined function, wrong argument count): it ended the image in tests.
   Design, limits and what is untested: `docs/debug-in-place.md`.
 - `~/lisp-ai/tools/form-edit.lisp`, shared by every project (`tools/serve-prelude.lisp` loads it when the image starts): replace, insert
   or append top-level forms in a file by name, or change one subform inside a form, leaving every other byte as it was.

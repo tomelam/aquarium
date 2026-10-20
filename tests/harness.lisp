@@ -32,7 +32,7 @@
     (let ((*standard-output* (make-broadcast-stream *standard-output* report)))
       (run-aquarium-tests)
       (run-redefinition-tests)
-      (run-debug-tests)
+      (run-shared-debug)
       (run-reset-tests)
       (run-shared-form-edit)
       (if (zerop *failures*)
