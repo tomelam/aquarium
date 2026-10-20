@@ -41,12 +41,14 @@
           (write-text source (file-text real))
           (unwind-protect
                (progn
-                (aquarium::reset-demo :source source :start start :keep-in kept-in :tank tank)
+                (handler-bind ((sb-kernel:redefinition-warning #'muffle-warning))
+                  (aquarium::reset-demo :source source :start start :keep-in kept-in :tank tank))
                 (progn
                  (check-equal "after the load, a fish looks as it did at the start" (aquarium:fish-glyph (aquarium:make-fish :dx 1))
                   "><>")
                  (check-equal "two resets in one second keep two files, not one" (length (files-in kept-in)) 2)))
-            (load real)
+            (handler-bind ((sb-kernel:redefinition-warning #'muffle-warning))
+              (load real))
             (check-equal "and the real file brings the finished fish back"
                          (aquarium:fish-glyph (aquarium:make-fish :dx 1)) "><(((*>")))
       (when (probe-file directory)
