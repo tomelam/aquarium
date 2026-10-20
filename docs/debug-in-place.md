@@ -1,7 +1,8 @@
 # Debug in place: design (2026-10-20)
 
-Status: **approved by Tom on 2026-10-20, all five decisions as proposed; not built yet**. Nothing in `src/` has changed. The
-prototype is in `run/debug-prototype/` (ignored by git; its `README.txt` says how to rerun it).
+Status: **built in `aquarium` on branch `debug-in-place`, 2026-10-20; not merged, not yet in the running image.** Tom
+approved all five decisions the same day; "How they ended" says where the build differs from the proposal. The prototype
+is in `run/debug-prototype/` (ignored by git; its `README.txt` says how to rerun it). `code-as-data` has none of this yet.
 
 ## Why
 
@@ -50,39 +51,47 @@ An error ends the request. The output printed before it stays. The `ERROR:` line
 - The running image and the fresh test image have the same default policy (debug 1), so these results apply to the
   project's code as it is compiled today.
 
-## The reply format proposed
+## The reply format as built (`src/debug.lisp`, `src/server.lisp`; run through the real socket on 2026-10-20)
 
-**A request that succeeds is unchanged, byte for byte.** Only the error reply changes. Its first line still starts
-`ERROR:`, so anything that looks for that still works.
+**A request that succeeds is unchanged, byte for byte** (`tests/debug-test.lisp` checks `(+ 1 2)` through the socket).
+Only the error reply changes. Its first line still starts `ERROR:`, so anything that looks for that still works.
 
     $ bin/eval '(progn (format t "before~%") (outer 2))'
     before
     ERROR: arithmetic error DIVISION-BY-ZERO signalled
     Operation was (/ 100 0).
-    HELD 7: the thread is waiting; nothing was unwound. It is abandoned after 300 s without a command.
+    HELD 1: the thread is waiting and nothing was unwound. After 300 s without a command it is abandoned.
     restarts:
-      0 ABORT    unwind the request, as before
-      1 USE-VALUE   Use another value instead of the quotient.     (only when the code establishes it)
+      0 ABORT-REQUEST  Unwind the request and reply with the error, as without debugging.
+      1 ABORT  abort thread (#<THREAD tid=4699 "aquarium connection" RUNNING {8005C887E3}>)
     frames:
       0 (SB-KERNEL::INTEGER-/-INTEGER 100 0)
       1 (OUTER 2)
-      2 ...
+      2 (SB-INT:SIMPLE-EVAL-IN-LEXENV (OUTER 2) #<NULL-LEXENV>)
+      ...
 
 The reply is sent at once and the connection closes, so `bin/eval` returns. The request is not finished: its thread is
-held.
+held. Restart 0 is always `ABORT-REQUEST` (the old behaviour: unwind and reply with the `ERROR:` line). Restarts the
+code establishes (here none; `USE-VALUE` in another test) follow, then SBCL's own `ABORT`. At most 15 frames are shown;
+the report says how to get more.
 
-The commands are ordinary Lisp forms, sent the same way, to the same door. Each is a function in package `aquarium`:
+The commands are ordinary requests, sent the same way, to the same door. Each is a function in package `aquarium`:
 
-    (debug-frames 7)                      the frames, as above
-    (debug-locals 7 1)                    ((X 2)) -- the variables of frame 1
-    (debug-eval 7 1 '(list x))            evaluate a form in frame 1
-    (debug-restart-frame 7 1)             run frame 1 again with its arguments (picks up a redefinition)
-    (debug-invoke 7 1 42)                 take restart 1, with arguments if it wants them
-    (debug-abandon 7)                     same as restart 0
-    (debug-result 7)                      what the original request printed and returned, once it has finished
+    (debug-frames 1 [end])                the frames, as (number . text)
+    (debug-locals 1 1)                    ((X 2) (Y 4)) -- the variables of frame 1
+    (debug-eval 1 1 '(list x))            evaluate a form in frame 1; returns its values
+    (debug-restart-frame 1 1)             run frame 1 again with its arguments (picks up a redefinition)
+    (debug-invoke 1 1 42)                 take restart 1, with arguments if it wants them
+    (debug-abandon 1)                     take restart 0
+    (debug-result 1 [wait])               wait up to WAIT s (default 20), then print the report or the finished reply
 
-`debug-result` exists because the first connection is already closed when the held request finally completes. Its output
-and values are kept under the id, in the old format, until read or until a limit is reached.
+`debug-restart-frame` and `debug-invoke` wait for what happens next and print it: the finished reply of the original
+request (as if it had never failed, `before` and all), or, if the error comes back, the new report under the **same**
+id. A finished reply is read once, then the session is forgotten. `debug-result` is for a request that is still running
+after the wait.
+
+A command on a session that does not exist, or is not waiting, prints a `;; ...` line and returns no value; it does not
+signal an error, because that would itself be held.
 
 ## Slynk is used as a library, not as a door
 
@@ -107,28 +116,41 @@ internal to Slynk, so a Slynk update could change them; the Qlot lock file pins 
 
 ## Rules that keep it safe
 
-- A **storage condition** (stack or heap exhausted) is not held; it is handled as today, with an `ERROR:` line.
-- At most **4** held sessions. A fifth error is handled as today.
-- A session left alone is abandoned after **300 s** (the same as `bin/eval`'s own wait) and then ends as today.
-- Only `error` is held. Warnings and interrupts are not.
-- Because a held thread keeps its locks, a request that fails while holding one blocks the others until the session ends.
-  The reply says which locks the held thread owns if SBCL can tell; otherwise Claude must remember it. (Not yet checked.)
+- A **storage condition** (stack or heap exhausted) is not held; it is handled as before, with an `ERROR:` line (tried by
+  hand: `Control stack exhausted`, no session made).
+- At most **4** sessions in use (`*held-limit*`). A fifth error is an ordinary `ERROR:` reply (tested). Finished sessions
+  whose result was never read are dropped beyond 8 (`*finished-kept*`; not tested).
+- A session left alone is abandoned after **300 s** (`*held-timeout*`, the same as `bin/eval`'s own wait). Its result then
+  says `(held session N abandoned after 300 s without a command)` and ends with the `ERROR:` line (tested with 1 s).
+- Only `error` is held. Warnings and interrupts are not. Errors that code handles itself (`handler-case`) are not held,
+  because the handler that unwinds runs first.
+- A direct call of `eval-request` (no socket, as in the old tests) is never held: the hold needs a connection to answer.
+- Because a held thread keeps its locks, a request that fails while holding one blocks every thread that wants the lock
+  until the session ends (shown in the prototype, case L). Nothing in the report says which locks are held.
+- Slynk's own debugger, for Tom's Sly REPL, is untouched: an error evaluated through Sly still opens Sly's debugger and
+  makes no session of mine (checked with a batch Emacs against a fresh image).
 
-## Decisions for Tom
+## Decisions (all five approved by Tom on 2026-10-20) and how they ended
 
-1. **Reply at once, result later** (proposed), or keep the connection open until the request finishes? Keeping it open
-   would make `bin/eval` hang for as long as Claude thinks.
-2. **Compile the project's code at `debug 3`**, in the development image only. Cost: somewhat slower code and more
-   memory. Gain: tail-call frames and `let` variables visible. How: one `proclaim` in `bin/serve.lisp` before the project is
-   loaded; the compiled files (fasls) built earlier at debug 1 must be rebuilt once.
-3. The limits above (4 sessions, 300 s).
-4. `aquarium` first, `code-as-data` after, as `NEXT.md` says.
-5. **Use Slynk's backend functions as a library** (proposed), or write the frame handling directly against `sb-di`.
+1. **Reply at once, result later.** Built as proposed.
+2. **Compile at `debug 3`.** The proposal said one `proclaim` in `bin/serve.lisp`. That did not work, for two reasons found
+   by trying it. First, `proclaim` inside a file loaded with `--load` is not seen by other threads: a request thread and a
+   Sly thread still compiled at debug 1. Second, `bin/test` rebuilds the project's compiled files at the default policy
+   over the ones the server loads. What is built instead: `(sb-ext:restrict-compiler-policy 'debug 3)` at the top of
+   `aquarium.asd`. It is global, for all threads, and both `bin/test` and `bin/serve.lisp` load that file first. Checked: a
+   function defined in a request thread keeps a tail-call frame and its `let` variable, and a Sly thread reports the
+   same restriction.
+   ASDF does not see a policy change, so the project's compiled files must be deleted once after the line is added.
+3. **Limits** 4 and 300 s, as proposed.
+4. **`aquarium` first.** Built here; `code-as-data` is still to do.
+5. **Slynk's backend functions as a library.** Built as proposed: `call-with-debugging-environment`, `compute-backtrace`,
+   `print-frame`, `frame-locals`, `eval-in-frame`, `restart-frame`.
 
-## Not tested yet
+## Not tested
 
-- Anything behind the real socket: reply format, the second connection reaching the held thread, `nc` timing.
-- Printing a frame whose arguments are large or circular.
-- A held thread inside code that was loaded from a different thread's dynamic bindings (`*package*`, output capture): the
-  held thread keeps what the original request bound, which is intended but unseen.
-- How Claude's sandbox and `bin/eval`'s `nc -w 300` behave when two `bin/eval` calls overlap.
+- Printing a frame whose arguments are large or circular (lines are cut at 200 characters and printed with a short
+  `*print-length*`; not tried on a circular argument).
+- Two `bin/eval` calls overlapping while Claude's sandbox waits (each call is its own connection; tried one at a time).
+- The 300 s timeout itself (only 1 and 2 s were tried).
+- A held thread inside code that takes a lock (prototype only).
+- Whether the demo tank keeps ticking while a session is held (the tick runs in its own thread; not looked at).

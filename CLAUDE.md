@@ -24,7 +24,12 @@ Copies of the ones in `~/lisp-ai/code-as-data/bin/`, as the tree file says; ther
   `rules/slynk.sexp` says. The SessionStart hook in `.claude/settings.json` starts it. `stop` waits until the process has
   exited, so a `start` right after cannot find the old image holding the Slynk port. `start` prints a WARNING on stderr
   (and still exits 0) when Slynk did not come up, because the server is useful without it.
-- `bin/eval '(form)'`: evaluate a form in that image, in package `aquarium`. This is how Claude runs Lisp.
+- `bin/eval '(form)'`: evaluate a form in that image, in package `aquarium`. This is how Claude runs Lisp. An error is
+  not unwound: the reply comes at once with the error, a session number (`HELD n`), the restarts and the frames, and the
+  failing thread waits (4 at most, 300 s each). Then work on it as a Lisp programmer does, with requests of their own:
+  `(debug-locals n frame)`, `(debug-eval n frame 'form)`, redefine the broken function, `(debug-restart-frame n frame)`,
+  `(debug-invoke n restart-number args...)`, `(debug-abandon n)`. The finished reply comes back from the last of these.
+  Design, limits and what is untested: `docs/debug-in-place.md`.
 - `~/lisp-ai/tools/form-edit.lisp`, shared by every project (`bin/serve.lisp` loads it when the image starts): replace, insert
   or append top-level forms in a file by name, or change one subform inside a form, leaving every other byte as it was.
   It can delete a form or a subform. Its tests run in `bin/test` (`tests/shared-test.lisp`).
