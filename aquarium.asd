@@ -21,8 +21,12 @@
  "What the editor needs: Qlot installs Eclector because a system of this project names it, and lisp-ai-tools is the editor."
  :depends-on ("eclector" "lisp-ai-tools"))
 
+(defsystem "aquarium/profile" :description
+ "What the profile needs: Qlot installs the JSON library because a system of this project names it, and lisp-ai-tools/profile logs the calls."
+ :depends-on ("com.inuoe.jzon" "lisp-ai-tools/profile"))
+
 (defsystem "aquarium/tests"
-  :depends-on ("aquarium" "aquarium/form-edit" "uiop")
+  :depends-on ("aquarium" "aquarium/form-edit" "aquarium/profile" "uiop")
   :serial t
   :components ((:module "tests" :components ((:file "harness") (:file "aquarium-test") (:file "reset-test") (:file "shared-test"))))
   :perform (test-op (o c) (symbol-call :aquarium/tests :run)))

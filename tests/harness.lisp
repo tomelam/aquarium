@@ -35,6 +35,7 @@
       (run-shared-debug)
       (run-reset-tests)
       (run-shared-form-edit)
+      (run-shared-profile)
       (if (zerop *failures*)
           (format t "all checks passed~%")
           (format t "~d check(s) failed~%" *failures*))))
