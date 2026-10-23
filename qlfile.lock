@@ -5,4 +5,4 @@
 ("lisp-ai-tools" .
  (:class qlot/source/git:source-git
   :initargs (:remote-url "file:///Volumes/Crucial%20X9/git-backups/lisp-ai-tools.git" :branch "systems-not-paths")
-  :version "git-5fd8ef037c809797722574621b67e484787c4309"))
+  :version "git-7db4f3e3fa9c25951da2f2cbb68cd397c8d5ba1c"))

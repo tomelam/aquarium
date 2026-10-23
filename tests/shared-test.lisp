@@ -19,3 +19,7 @@
 (defun run-shared-guard ()
   "A scratch project in run/, then this project's own bin/guard and .claude/settings.json."
   (incf *failures* (lisp-ai-guard-tests:run (scratch-directory) (asdf:system-source-directory :aquarium))))
+
+(defun run-shared-script ()
+  "The script behind bin/lisp: eval of a healthy server, of a server that is down, and of a start that fails."
+  (incf *failures* (lisp-ai-script-tests:run (scratch-directory) #'aquarium:start-server #'aquarium:stop-server)))
