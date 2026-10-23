@@ -41,20 +41,22 @@ project's own; its first line loads `tools/serve-prelude.lisp`.
 - `bin/test`: the arbiter. `tests/demo-test.el` is the check of `demo.el`, run by hand with Emacs in batch mode while the
   image is up: `/opt/homebrew/bin/Emacs --batch -Q -l tests/demo-test.el`.
 
-## What differs from code-as-data
+## The guard layers, and what is its own
 
-- No guard hook. `permissions.deny` in `.claude/settings.json` is the only layer here; it was generated from
-  `rules/forbidden-programs.sexp` by code-as-data's `sync-deny-rules` logic. Change the rules file and regenerate it,
-  or copy the guard over, before this project grows. Unlike code-as-data's, this list has no full-path rules
-  (`Bash(/usr/bin/sed *)`).
-- A deny-only profile (`~/lisp-ai/tools/profile.lisp`, shared; `~/lisp-ai/docs/guard-and-deny.md` explains the layers).
-  `bin/profile-hook` is the hook on PreToolUse, PostToolUse and PostToolUseFailure; it never blocks. Switch it on from
-  `bin/eval` with `(lisp-ai-profile:profiling :aquarium :on)` (`:off` turns it off, no argument asks;
-  `(lisp-ai-profile:status :aquarium)` shows the switches). While it is on, `run/profile/events.log` records each Bash
-  call and whether it ran: a call that did not run was stopped by the deny list (or declined at a prompt).
-  `rules/profile-corpus.sexp` lists harmless commands to probe with; there is no guard here, so the shadow and limit
-  switches do nothing. `(lisp-ai-profile:write-summary :aquarium)` writes `data/profile-DATE.sexp`, the only profile
-  file to commit.
+- The guard, the deny list and the profile are the same as in code-as-data, from the shared code in `~/lisp-ai/tools/`
+  (`~/lisp-ai/docs/guard-and-deny.md` explains the layers). `bin/guard` is the PreToolUse hook on Bash, a wrapper for
+  `tools/guard` (the logic is `tools/guard.lisp`, system `lisp-ai-tools/guard`). It denies the programs in
+  `rules/forbidden-programs.sexp`. It asks this image first (`src/server.lisp` answers a hook payload with the marker
+  `OK:` and the decision) and takes a fresh SBCL when the image does not answer; an answer without the marker is no answer.
+- `permissions.deny` in `.claude/settings.json` is generated from the same rules file: after changing it, run
+  `bin/eval '(lisp-ai-guard:sync-deny-rules :aquarium)'`; never edit the list by hand. Each program is denied by name and
+  by full path. A test fails if the settings and the rules file drift apart, or if the guard hook is not wired.
+- The profile (`~/lisp-ai/tools/profile.lisp`, shared). Switch it on from `bin/eval` with
+  `(lisp-ai-profile:profiling :aquarium :on)` (`:off` turns it off, no argument asks; `(lisp-ai-profile:status :aquarium)`
+  shows the switches, and `shadowing` and `limit` work as in code-as-data). While it is on, `run/profile/events.log`
+  records each Bash call, the guard's verdict, and whether it ran (`bin/profile-hook` on PostToolUse and
+  PostToolUseFailure; it never blocks). `rules/profile-corpus.sexp` lists harmless commands to probe with.
+  `(lisp-ai-profile:write-summary :aquarium)` writes `data/profile-DATE.sexp`, the only profile file to commit.
 - The functions in `src/aquarium.lisp` are declaimed `notinline`. Without that, callers compiled from the file keep
   the return type the first definition had, and a redefinition that returns a longer string breaks them.
   `run-redefinition-tests` fails if the declaim goes.

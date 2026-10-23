@@ -36,6 +36,7 @@
       (run-reset-tests)
       (run-shared-form-edit)
       (run-shared-profile)
+      (progn (run-server-hook) (run-shared-guard))
       (if (zerop *failures*)
           (format t "all checks passed~%")
           (format t "~d check(s) failed~%" *failures*))))

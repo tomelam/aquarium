@@ -12,6 +12,13 @@
    line starting ERROR:. Returns the reply and, when an error was held, its session."
   (eval-with-debugging request :aquarium))
 
+(defun handle-request (request)
+  "The reply to REQUEST: the hook's answer for a Claude Code hook payload (tools/guard asks the image first), else the result
+   of evaluating it. Returns the reply and, when an error was held (a Lisp request only), its session."
+  (if (lisp-ai-hook:hook-payload-p request)
+      (values (lisp-ai-hook:socket-reply request (lisp-ai-guard:forbidden-programs :aquarium) :aquarium) nil)
+      (eval-request request)))
+
 (defun serve-connection (connection)
   (let ((stream (sb-bsd-sockets:socket-make-stream connection :input t :output t :element-type 'character
                                                                :external-format :utf-8 :buffering :full)))
@@ -22,7 +29,7 @@
              (let ((request (read-all stream))
                    (*reply-now* (reply-now-function stream connection)))
                (multiple-value-bind (text held)
-                   (eval-request request)
+                   (handle-request request)
                  (unless held (write-string text stream) (finish-output stream))))
            (serious-condition (condition)
              (format *error-output* "connection dropped: ~a~%" (condition-text condition))))
