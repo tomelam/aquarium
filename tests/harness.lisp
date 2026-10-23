@@ -35,6 +35,7 @@
       (run-shared-debug)
       (run-reset-tests)
       (run-shared-form-edit)
+      (run-shared-bench)
       (run-shared-script)
       (progn (run-server-hook) (run-shared-guard))
       (if (zerop *failures*)
