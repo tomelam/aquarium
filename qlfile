@@ -1,1 +1,2 @@
 ql :all 2026-01-01
+git lisp-ai-tools https://github.com/tomelam/lisp-ai-tools.git :branch master

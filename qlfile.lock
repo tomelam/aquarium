@@ -2,3 +2,7 @@
  (:class qlot/source/dist:source-dist
   :initargs (:distribution "https://beta.quicklisp.org/dist/quicklisp.txt" :%version "2026-01-01")
   :version "2026-01-01"))
+("lisp-ai-tools" .
+ (:class qlot/source/git:source-git
+  :initargs (:remote-url "https://github.com/tomelam/lisp-ai-tools.git" :branch "master")
+  :version "git-daa9a752d44a27d0bf79f457b177839b8537157a"))

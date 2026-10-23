@@ -36,14 +36,14 @@ The fix is to leave the failing thread alive, with its stack, and let later requ
 ## The reply format today (read from `src/server.lisp`; examples run on the real image on 2026-10-20)
 
 A request is Lisp text on a Unix socket. The reply is what the forms printed, then one printed line per value. The
-connection then closes. `bin/eval` exits 0 in every case below.
+connection then closes. `bin/lisp eval` exits 0 in every case below.
 
-    $ bin/eval '(progn (format t "hello~%") (values 1 "two"))'
+    $ bin/lisp eval '(progn (format t "hello~%") (values 1 "two"))'
     hello
     1
     "two"
 
-    $ bin/eval '(progn (format t "before~%") (/ 1 0))'
+    $ bin/lisp eval '(progn (format t "before~%") (/ 1 0))'
     before
     ERROR: arithmetic error DIVISION-BY-ZERO signalled
     Operation was (/ 1 0).
@@ -79,7 +79,7 @@ An error ends the request. The output printed before it stays. The `ERROR:` line
 **A request that succeeds is unchanged, byte for byte** (`tests/debug-test.lisp` checks `(+ 1 2)` through the socket).
 Only the error reply changes. Its first line still starts `ERROR:`, so anything that looks for that still works.
 
-    $ bin/eval '(progn (format t "before~%") (outer 2))'
+    $ bin/lisp eval '(progn (format t "before~%") (outer 2))'
     before
     ERROR: arithmetic error DIVISION-BY-ZERO signalled
     Operation was (/ 100 0).
@@ -93,7 +93,7 @@ Only the error reply changes. Its first line still starts `ERROR:`, so anything 
       2 (SB-INT:SIMPLE-EVAL-IN-LEXENV (OUTER 2) #<NULL-LEXENV>)
       ...
 
-The reply is sent at once and the connection closes, so `bin/eval` returns. The request is not finished: its thread is
+The reply is sent at once and the connection closes, so `bin/lisp eval` returns. The request is not finished: its thread is
 held. Restart 0 is always `ABORT-REQUEST` (the old behaviour: unwind and reply with the `ERROR:` line). Restarts the
 code establishes (here none; `USE-VALUE` in another test) follow, then SBCL's own `ABORT`. At most 15 frames are shown;
 the report says how to get more.
@@ -118,7 +118,7 @@ signal an error, because that would itself be held.
 
 ## Slynk is used as a library, not as a door
 
-The transport is the Unix socket that `bin/eval` already uses. Neither Sly (the Emacs half) nor Slynk's TCP port is
+The transport is the Unix socket that `bin/lisp eval` already uses. Neither Sly (the Emacs half) nor Slynk's TCP port is
 involved. Slynk, the Lisp half, is a package already loaded in the image, and the design calls a few of its functions in
 `slynk-backend`, as one calls any library. They wrap SBCL's own debugger internals (`sb-di`). Four examples from the
 prototype, with what each did there:
@@ -143,7 +143,7 @@ internal to Slynk, so a Slynk update could change them; the Qlot lock file pins 
   hand: `Control stack exhausted`, no session made).
 - At most **4** sessions in use (`*held-limit*`). A fifth error is an ordinary `ERROR:` reply (tested). Finished sessions
   whose result was never read are dropped beyond 8 (`*finished-kept*`; not tested).
-- A session left alone is abandoned after **300 s** (`*held-timeout*`, the same as `bin/eval`'s own wait). Its result then
+- A session left alone is abandoned after **300 s** (`*held-timeout*`, the same as `bin/lisp eval`'s own wait). Its result then
   says `(held session N abandoned after 300 s without a command)` and ends with the `ERROR:` line (tested with 1 s).
 - Only `error` is held. Warnings and interrupts are not. Errors that code handles itself (`handler-case`) are not held,
   because the handler that unwinds runs first.
@@ -158,9 +158,9 @@ internal to Slynk, so a Slynk update could change them; the Qlot lock file pins 
 1. **Reply at once, result later.** Built as proposed.
 2. **Compile at `debug 3`.** The proposal said one `proclaim` in `bin/serve.lisp`. That did not work, for two reasons found
    by trying it. First, `proclaim` inside a file loaded with `--load` is not seen by other threads: a request thread and a
-   Sly thread still compiled at debug 1. Second, `bin/test` rebuilds the project's compiled files at the default policy
+   Sly thread still compiled at debug 1. Second, `bin/lisp test` rebuilds the project's compiled files at the default policy
    over the ones the server loads. What is built instead: `(sb-ext:restrict-compiler-policy 'debug 3)` at the top of
-   `aquarium.asd`. It is global, for all threads, and both `bin/test` and `bin/serve.lisp` load that file first. Checked: a
+   `aquarium.asd`. It is global, for all threads, and both `bin/lisp test` and `bin/serve.lisp` load that file first. Checked: a
    function defined in a request thread keeps a tail-call frame and its `let` variable, and a Sly thread reports the
    same restriction.
    ASDF does not see a policy change, so the project's compiled files must be deleted once after the line is added.
@@ -173,7 +173,7 @@ internal to Slynk, so a Slynk update could change them; the Qlot lock file pins 
 
 - Printing a frame whose arguments are large or circular (lines are cut at 200 characters and printed with a short
   `*print-length*`; not tried on a circular argument).
-- Two `bin/eval` calls overlapping while Claude's sandbox waits (each call is its own connection; tried one at a time).
+- Two `bin/lisp eval` calls overlapping while Claude's sandbox waits (each call is its own connection; tried one at a time).
 - The 300 s timeout itself (only 1 and 2 s were tried).
 - A held thread inside code that takes a lock (prototype only).
 - A cold start of the real images with all of this (the compiled files must be deleted once before it). Cold starts from

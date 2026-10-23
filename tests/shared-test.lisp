@@ -1,47 +1,25 @@
-;;;; The tools every project shares live in ~/lisp-ai/tools/. Their tests are run here too, in this project's image, with
-;;;; scratch files in this project's run/.
+;;;; The tools every project shares bring their tests with them, as the system lisp-ai-tools/tests. They run here, in this
+;;;; project's image, with scratch files in this project's run/. A missing system is a load error, not a skipped test.
 
 (in-package :aquarium/tests)
 
+(defun scratch-directory ()
+  (asdf:system-relative-pathname :aquarium "run/"))
+
 (defun run-shared-form-edit ()
-  "Run ~/lisp-ai/tools/form-edit-test.lisp. A missing file is a failure, not a skip."
-  (let ((tests (merge-pathnames "../tools/form-edit-test.lisp" (asdf:system-source-directory :aquarium))))
-    (cond ((probe-file tests)
-           (load tests)
-           (incf *failures*
-                 (funcall (find-symbol "RUN" "FORM-EDIT-TESTS") (asdf:system-relative-pathname :aquarium "run/"))))
-          (t
-           (incf *failures*)
-           (format t "FAIL: ~a not found, so the form-edit tests did not run~%" tests)))))
+  (incf *failures* (form-edit-tests:run (scratch-directory))))
 
 (defun run-shared-debug ()
-  "Run ~/lisp-ai/tools/debug-test.lisp against this project's own server, through a socket in run/. A missing file is a
-   failure, not a skip."
-  (let ((tests (merge-pathnames "../tools/debug-test.lisp" (asdf/system:system-source-directory :aquarium))))
-    (cond
-     ((probe-file tests) (load tests)
-      (incf *failures*
-            (funcall (find-symbol "RUN" "LISP-AI-DEBUG-TESTS") (asdf/system:system-relative-pathname :aquarium "run/")
-                     #'aquarium:start-server #'aquarium:stop-server)))
-     (t (incf *failures*) (format t "FAIL: ~a not found, so the debug tests did not run~%" tests)))))
+  "The debug tests go through this project's own server, on a socket in run/."
+  (incf *failures* (lisp-ai-debug-tests:run (scratch-directory) #'aquarium:start-server #'aquarium:stop-server)))
 
 (defun run-shared-profile ()
-  "Run ~/lisp-ai/tools/profile-test.lisp. A missing file is a failure, not a skip."
-  (let ((tests (merge-pathnames "../tools/profile-test.lisp" (asdf/system:system-source-directory :aquarium))))
-    (cond
-     ((probe-file tests) (load tests)
-      (incf *failures*
-            (funcall (find-symbol "RUN" "LISP-AI-PROFILE-TESTS")
-                     (asdf/system:system-relative-pathname :aquarium "run/"))))
-     (t (incf *failures*) (format t "FAIL: ~a not found, so the profile tests did not run~%" tests)))))
+  (incf *failures* (lisp-ai-profile-tests:run (scratch-directory))))
 
 (defun run-shared-guard ()
-  "Run ~/lisp-ai/tools/guard-test.lisp: a scratch project in this project's run/, then this project's bin/guard and
-   .claude/settings.json. A missing file is a failure, not a skip."
-  (let ((tests (merge-pathnames "../tools/guard-test.lisp" (asdf/system:system-source-directory :aquarium))))
-    (cond
-     ((probe-file tests) (load tests)
-      (incf *failures*
-            (funcall (find-symbol "RUN" "LISP-AI-GUARD-TESTS") (asdf/system:system-relative-pathname :aquarium "run/")
-                     (asdf/system:system-source-directory :aquarium))))
-     (t (incf *failures*) (format t "FAIL: ~a not found, so the guard tests did not run~%" tests)))))
+  "A scratch project in run/, then this project's own bin/lisp guard and .claude/settings.json."
+  (incf *failures* (lisp-ai-guard-tests:run (scratch-directory) (asdf:system-source-directory :aquarium))))
+
+(defun run-shared-script ()
+  "The script behind bin/lisp: eval of a healthy server, of a server that is down, and of a start that fails."
+  (incf *failures* (lisp-ai-script-tests:run (scratch-directory) #'aquarium:start-server #'aquarium:stop-server)))

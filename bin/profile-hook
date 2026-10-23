@@ -1,3 +1,0 @@
-#!/bin/sh
-# bin/profile-hook KIND -- logs a Claude Code hook call for the profile. The work is done by ../../tools/profile-hook.
-exec "$(dirname "$0")/../../tools/profile-hook" "$(cd "$(dirname "$0")/.." && pwd)" "$@"

@@ -1,3 +1,0 @@
-#!/bin/sh
-# bin/eval '(form)' -- evaluate Lisp in this project's always-on image. The work is done by ../../tools/eval.
-exec "$(dirname "$0")/../../tools/eval" "$(cd "$(dirname "$0")/.." && pwd)" "$@"

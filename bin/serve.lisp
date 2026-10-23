@@ -1,7 +1,14 @@
-;;;; Loaded by bin/lisp-server in the always-on image: load the system, listen for Claude on run/lisp.sock and for Sly where
+;;;; Loaded by bin/lisp start in the always-on image: load the system, listen for Claude on run/lisp.sock and for Sly where
 ;;;; rules/slynk.sexp says, start ticking the tank into run/tank.txt, never return.
-;;;; The first half (load the system, the editor, make SCRATCH) is the same for every project: tools/serve-prelude.lisp.
-(load (merge-pathnames "../../tools/serve-prelude.lisp" *load-truename*))
+
+(asdf/operate:load-system "aquarium")
+
+;;; Sly's REPLs take the global value of *package*, so they start in the project's package and need no in-package.
+(setf (sb-ext:symbol-global-value '*package*) (find-package :aquarium))
+
+;;; SCRATCH is where forms are tried before they go to a file; form-edit refuses a form with a symbol of it. The editor
+;;; (lisp-ai-tools) and LISP-AI-DEBUG are loaded with the system, so changing a file costs no start-up.
+(make-package :scratch :use '(:cl :aquarium :lisp-ai-debug))
 
 ;;; a port already taken must not stop the server coming up
 (handler-case (format t "Slynk listening on port ~d~%" (aquarium:start-slynk))
