@@ -1,4 +1,0 @@
-#!/bin/sh
-# bin/lisp-server start|stop|status -- the always-on SBCL of this project. The work is done by ../../tools/lisp-server;
-# what this project's image does besides answering on run/lisp.sock is in bin/serve.lisp.
-exec "$(dirname "$0")/../../tools/lisp-server" "$(cd "$(dirname "$0")/.." && pwd)" "$@"

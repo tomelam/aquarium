@@ -1,3 +1,0 @@
-#!/bin/sh
-# bin/qlot -- run Qlot with cl+ssl pinned to Homebrew's openssl@3. The work is done by ../../tools/qlot.
-exec "$(dirname "$0")/../../tools/qlot" "$@"

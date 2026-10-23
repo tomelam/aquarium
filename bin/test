@@ -1,3 +1,0 @@
-#!/bin/sh
-# bin/test -- the arbiter: this project's tests, run through Qlot's pinned dist. The work is done by ../../tools/test.
-exec "$(dirname "$0")/../../tools/test" "$(cd "$(dirname "$0")/.." && pwd)" "$@"
