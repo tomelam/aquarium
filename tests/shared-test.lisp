@@ -17,7 +17,7 @@
   (incf *failures* (lisp-ai-profile-tests:run (scratch-directory))))
 
 (defun run-shared-guard ()
-  "A scratch project in run/, then this project's own bin/guard and .claude/settings.json."
+  "A scratch project in run/, then this project's own bin/lisp guard and .claude/settings.json."
   (incf *failures* (lisp-ai-guard-tests:run (scratch-directory) (asdf:system-source-directory :aquarium))))
 
 (defun run-shared-script ()

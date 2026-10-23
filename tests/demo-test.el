@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t -*-
 ;; A check of demo.el, run by hand with the image up:  /opt/homebrew/bin/Emacs --batch -Q -l tests/demo-test.el
-;; Prints one line per check. Needs bin/lisp-server running: it connects to the image for real.
+;; Prints one line per check. Needs the image running (bin/lisp start): it connects to it for real.
 ;; paredit-mode in REPLs, added to the hook before demo.el is loaded, as ~/.emacs.d/init.el has it
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/elpa/paredit-26"))
 (require 'paredit)

@@ -1,4 +1,4 @@
-;;;; Loaded by bin/lisp-server in the always-on image: load the system, listen for Claude on run/lisp.sock and for Sly where
+;;;; Loaded by bin/lisp start in the always-on image: load the system, listen for Claude on run/lisp.sock and for Sly where
 ;;;; rules/slynk.sexp says, start ticking the tank into run/tank.txt, never return.
 
 (asdf/operate:load-system "aquarium")

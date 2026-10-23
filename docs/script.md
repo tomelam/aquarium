@@ -10,7 +10,7 @@ its first four fish; see "Replaying the demo" in `CLAUDE.md`.
 
 | # | Claude does | Tom watches | Shows |
 |---|---|---|---|
-| 1 | `(add-fish *tank* "Eve" :x 5 :y 6 :dx 1)` through `bin/eval` | A fifth fish appears in the tank within a second. The source window does not change. | The image holds state; a change to data is not a change to the file. In the REPL: `(length (tank-fish *tank*))` gives 5; `C-c I`, then `*tank*`, opens the Inspector. |
+| 1 | `(add-fish *tank* "Eve" :x 5 :y 6 :dx 1)` through `bin/lisp eval` | A fifth fish appears in the tank within a second. The source window does not change. | The image holds state; a change to data is not a change to the file. In the REPL: `(length (tank-fish *tank*))` gives 5; `C-c I`, then `*tank*`, opens the Inspector. |
 | 2 | Redefines `fish-glyph` in the image only: bigger fish, `><(((*>` and `<*)))><` | Every fish changes shape at the next frame, and they turn at the wall one step sooner. The source window still shows the old `><>`. | The image is now ahead of the file. |
 | 3 | Writes that `fish-glyph` form into `src/aquarium.lisp` with `~/lisp-ai/tools/form-edit.lisp` | The source window redraws and the new `fish-glyph` flashes. Nothing else in the file moves. | The file is a record of the image, written as forms, not text search-and-replace. |
 | 4 | Redefines `step-fish` in the image: fish also drift up and down | The fish start wandering between rows. | A behaviour change, not just a look. |
@@ -21,7 +21,7 @@ its first four fish; see "Replaying the demo" in `CLAUDE.md`.
 ## Things Tom can type in the REPL (the bottom right window) while waiting
 
 The REPL talks to the same image Claude uses, so everything below shows up in the tank. Nothing here changes the file.
-If it goes wrong, Claude restarts the image (`bin/lisp-server stop`, then `start`).
+If it goes wrong, Claude restarts the image (`bin/lisp stop`, then `start`).
 
 - `*tank*` then `C-c I` (or `(inspect *tank*)`): the Inspector. Press Return on a link to go into a fish, `l` to go back.
 - `(add-fish *tank* "Zed" :x 10 :y 6 :dx 1)`: a fish appears within a second.

@@ -21,7 +21,7 @@
   (or (car (last (sort (file-expand-wildcards
                         (expand-file-name "~/.cache/qlot/releases/beta.quicklisp.org/quicklisp/*/distinfo/sly/*/sly-*"))
                        #'string<)))
-      (error "No Sly checkout under ~/.cache/qlot: run bin/qlot install in the aquarium project first")))
+      (error "No Sly checkout under ~/.cache/qlot: run qlot install in the aquarium project first")))
 
 (let ((directory (aquarium-demo--sly-directory)))
   (when (and (featurep 'sly)
