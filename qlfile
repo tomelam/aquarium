@@ -1,2 +1,2 @@
 ql :all 2026-01-01
-git lisp-ai-tools file:///Volumes/Crucial%20X9/git-backups/lisp-ai-tools.git :branch systems-not-paths
+git lisp-ai-tools https://github.com/tomelam/lisp-ai-tools.git :branch master
