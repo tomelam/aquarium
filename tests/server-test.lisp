@@ -19,16 +19,15 @@
   (format nil "{\"tool_name\":~s,\"tool_input\":{\"command\":~s}}" tool command))
 
 (defun run-server-hook ()
-  (let* ((path (format nil "/tmp/aquarium-test-~d.sock" (sb-posix:getpid)))
-         (server (aquarium:start-server path)))
+  (let* ((path (format nil "/tmp/aquarium-test-~d.sock" (sb-posix:getpid))) (server (aquarium:start-server path)))
     (unwind-protect
-         (progn
-           (check-equal "a form is evaluated" (ask path "(* 6 7)") (format nil "42~%"))
-           (check-equal "an allowed hook payload is answered with the marker alone" (ask path (hook-json "Bash" "git status"))
-            (format nil "~a~%" (lisp-ai-hook:socket-marker)))
-           (let ((reply (ask path (hook-json "Bash" "cat f"))))
-             (check "a refused hook payload starts with the marker" (eql 0 (search (lisp-ai-hook:socket-marker) reply)))
-             (check "and carries the deny decision" (search "\"permissionDecision\":\"deny\"" reply)))
-           (check "a hook payload is answered, never read as Lisp and held"
-                  (not (search "HELD " (ask path (hook-json "Bash" "cat f"))))))
+        (progn
+         (check-equal "a form is evaluated" (ask path "(* 6 7)") (format nil "42~%"))
+         (check-equal "an allowed hook payload is answered with the marker alone"
+          (ask path (hook-json "Bash" "git status")) (format nil "~a~%" (lisp-ai-guard:socket-marker)))
+         (let ((reply (ask path (hook-json "Bash" "cat f.lisp"))))
+           (check "a refused hook payload starts with the marker" (eql 0 (search (lisp-ai-guard:socket-marker) reply)))
+           (check "and carries the deny decision" (search "\"permissionDecision\":\"deny\"" reply)))
+         (check "a hook payload is answered, never read as Lisp and held"
+          (not (search "HELD " (ask path (hook-json "Bash" "cat f.lisp"))))))
       (aquarium:stop-server server))))

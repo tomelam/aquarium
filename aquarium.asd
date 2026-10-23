@@ -9,7 +9,7 @@
 (defsystem "aquarium"
   :description "A tank of fish drawn as text, to be changed while it runs."
   :depends-on ("sb-posix" "sb-bsd-sockets" "slynk" "uiop"
-               "lisp-ai-tools" "lisp-ai-tools/debug" "lisp-ai-tools/hook" "lisp-ai-tools/profile")
+               "lisp-ai-tools" "lisp-ai-tools/debug" "lisp-ai-tools/guard")
   :serial t
   :components ((:module "src" :components ((:file "package") (:file "aquarium") (:file "demo") (:file "server") (:file "slynk-server")))))
 
