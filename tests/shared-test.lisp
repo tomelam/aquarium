@@ -9,12 +9,13 @@
 (defun run-shared-form-edit ()
   (incf *failures* (form-edit-tests:run (scratch-directory))))
 
+(defun run-shared-bench ()
+  "The workbench, on a scratch project in run/."
+  (incf *failures* (lisp-ai-bench-tests:run (scratch-directory))))
+
 (defun run-shared-debug ()
   "The debug tests go through this project's own server, on a socket in run/."
   (incf *failures* (lisp-ai-debug-tests:run (scratch-directory) #'aquarium:start-server #'aquarium:stop-server)))
-
-(defun run-shared-profile ()
-  (incf *failures* (lisp-ai-profile-tests:run (scratch-directory))))
 
 (defun run-shared-guard ()
   "A scratch project in run/, then this project's own bin/lisp guard and .claude/settings.json."

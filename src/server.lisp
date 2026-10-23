@@ -15,8 +15,8 @@
 (defun handle-request (request)
   "The reply to REQUEST: the hook's answer for a Claude Code hook payload (tools/guard asks the image first), else the result
    of evaluating it. Returns the reply and, when an error was held (a Lisp request only), its session."
-  (if (lisp-ai-hook:hook-payload-p request)
-      (values (lisp-ai-hook:socket-reply request (lisp-ai-guard:forbidden-programs :aquarium) :aquarium) nil)
+  (if (lisp-ai-guard:hook-payload-p request)
+      (values (lisp-ai-guard:socket-reply request (lisp-ai-guard:forbidden-programs :aquarium) :aquarium) nil)
       (eval-request request)))
 
 (defun serve-connection (connection)

@@ -19,7 +19,7 @@ loaded in the Emacs, `demo.el` stops and says so: restart Emacs.
 ## The tools in `bin/`
 
 `bin/lisp` is the one way into this project's Lisp, for Claude and for Tom: the words `eval`, `start`, `stop`, `status`,
-`test`, `guard`, `profile` and `qlot`. It is eight lines. The work is done by the script `lisp` of the tools repo
+`test`, `guard` and `qlot`. It is eight lines. The work is done by the script `lisp` of the tools repo
 (github.com/tomelam/lisp-ai-tools), which Qlot installs inside this project (`qlfile`, `qlfile.lock`); the name of this
 project's ASDF system, `aquarium`, is the one thing `bin/lisp` says, and nothing is found by the name of the directory.
 `~/lisp-ai/CLAUDE.md` explains the gateway and the tools. Only `bin/serve.lisp`, what this image does besides answering
@@ -45,23 +45,20 @@ makes the package `scratch` and starts the tank and the servers.
 - `bin/lisp test`: the arbiter. `tests/demo-test.el` is the check of `demo.el`, run by hand with Emacs in batch mode
   while the image is up: `/opt/homebrew/bin/Emacs --batch -Q -l tests/demo-test.el`.
 
-## The guard layers, and what is its own
+## The workbench, the gate, and what is its own
 
-- The guard, the deny list and the profile are the same as in code-as-data, from the shared code of the tools repo
-  (`~/lisp-ai/docs/guard-and-deny.md` explains the layers). `bin/lisp guard` is the PreToolUse hook on Bash (the logic
-  is `guard.lisp` of the tools repo, system `lisp-ai-tools/guard`). It denies the programs in
-  `rules/forbidden-programs.sexp`. It asks this image first (`src/server.lisp` answers a hook payload with the marker
-  `OK:` and the decision) and takes a fresh SBCL when the image does not answer; an answer without the marker is no
-  answer.
-- `permissions.deny` in `.claude/settings.json` is generated from the same rules file: after changing it, run
-  `bin/lisp eval '(lisp-ai-guard:sync-deny-rules :aquarium)'`; never edit the list by hand. Each program is denied by
-  name and by full path. A test fails if the settings and the rules file drift apart, or if the guard hook is not wired.
-- The profile (`profile.lisp` of the tools repo, shared). Switch it on from `bin/lisp eval` with
-  `(lisp-ai-profile:profiling :aquarium :on)` (`:off` turns it off, no argument asks;
-  `(lisp-ai-profile:status :aquarium)` shows the switches, and `shadowing` and `limit` work as in code-as-data). While
-  it is on, `run/profile/events.log` records each Bash call, the guard's verdict, and whether it ran (`bin/lisp profile`
-  on PostToolUse and PostToolUseFailure; it never blocks). `rules/profile-corpus.sexp` lists harmless commands to probe
-  with. `(lisp-ai-profile:write-summary :aquarium)` writes `data/profile-DATE.sexp`, the only profile file to commit.
+- The workbench and the gate are the same as in code-as-data, from the shared code of the tools repo
+  (`~/lisp-ai/docs/workbench.md` says how a change flows). Lisp is changed in this image and saved from it: `(pending)`,
+  `(save 'name :file "src/aquarium.lisp")`, `(save-all)`, `(run-tests)`, `(where 'name)`, `(drop 'name)`, `(new-file
+  ...)`, `(add-component ...)` through `bin/lisp eval`; `bin/lisp stop` refuses while anything is unsaved. The ledger's
+  mirror is `run/pending.sexp`; `bin/serve.lisp` configures the workbench for `:aquarium`.
+- `bin/lisp guard` is the PreToolUse hook on Bash and on Edit, Write and MultiEdit (the logic is `guard.lisp` of the
+  tools repo, system `lisp-ai-tools/guard`). It refuses Edit and MultiEdit of a Lisp file, Write over one, a shell
+  command that writes one, and a program of `rules/forbidden-programs.sexp` used on Lisp (`rules/lisp-files.sexp` says
+  what counts as Lisp); everything else passes. It asks this image first (`src/server.lisp` answers a hook payload
+  with the marker `OK:` and the decision) and takes a fresh SBCL when the image does not answer; an answer without
+  the marker is no answer. Each denial is a line in `run/gate.log`. `.claude/settings.json` carries no deny list; a
+  shared test fails if the hooks are not wired or a deny list comes back.
 - The functions in `src/aquarium.lisp` are declaimed `notinline`. Without that, callers compiled from the file keep
   the return type the first definition had, and a redefinition that returns a longer string breaks them.
   `run-redefinition-tests` fails if the declaim goes.

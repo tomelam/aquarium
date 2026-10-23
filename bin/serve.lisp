@@ -7,8 +7,10 @@
 (setf (sb-ext:symbol-global-value '*package*) (find-package :aquarium))
 
 ;;; SCRATCH is where forms are tried before they go to a file; form-edit refuses a form with a symbol of it. The editor
-;;; (lisp-ai-tools) and LISP-AI-DEBUG are loaded with the system, so changing a file costs no start-up.
-(make-package :scratch :use '(:cl :aquarium :lisp-ai-debug))
+;;; (lisp-ai-tools), LISP-AI-DEBUG and the workbench LISP-AI-BENCH are loaded with the system, so changing a file costs no
+;;; start-up. The workbench keeps the ledger of definitions made in this image (run/pending.sexp) for this project.
+(make-package :scratch :use '(:cl :aquarium :lisp-ai-debug :lisp-ai-bench))
+(lisp-ai-bench:configure :project :aquarium)
 
 ;;; a port already taken must not stop the server coming up
 (handler-case (format t "Slynk listening on port ~d~%" (aquarium:start-slynk))
