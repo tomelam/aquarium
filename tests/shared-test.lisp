@@ -34,3 +34,14 @@
             (funcall (find-symbol "RUN" "LISP-AI-PROFILE-TESTS")
                      (asdf/system:system-relative-pathname :aquarium "run/"))))
      (t (incf *failures*) (format t "FAIL: ~a not found, so the profile tests did not run~%" tests)))))
+
+(defun run-shared-guard ()
+  "Run ~/lisp-ai/tools/guard-test.lisp: a scratch project in this project's run/, then this project's bin/guard and
+   .claude/settings.json. A missing file is a failure, not a skip."
+  (let ((tests (merge-pathnames "../tools/guard-test.lisp" (asdf/system:system-source-directory :aquarium))))
+    (cond
+     ((probe-file tests) (load tests)
+      (incf *failures*
+            (funcall (find-symbol "RUN" "LISP-AI-GUARD-TESTS") (asdf/system:system-relative-pathname :aquarium "run/")
+                     (asdf/system:system-source-directory :aquarium))))
+     (t (incf *failures*) (format t "FAIL: ~a not found, so the guard tests did not run~%" tests)))))

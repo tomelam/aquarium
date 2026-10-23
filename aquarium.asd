@@ -13,7 +13,7 @@
 
 (defsystem "aquarium"
   :description "A tank of fish drawn as text, to be changed while it runs."
-  :depends-on ("sb-posix" "sb-bsd-sockets" "lisp-ai-tools/debug" "slynk" "uiop")
+  :depends-on ("sb-posix" "sb-bsd-sockets" "lisp-ai-tools/debug" "lisp-ai-tools/hook" "slynk" "uiop")
   :serial t
   :components ((:module "src" :components ((:file "package") (:file "aquarium") (:file "demo") (:file "server") (:file "slynk-server")))))
 
@@ -26,7 +26,7 @@
  :depends-on ("com.inuoe.jzon" "lisp-ai-tools/profile"))
 
 (defsystem "aquarium/tests"
-  :depends-on ("aquarium" "aquarium/form-edit" "aquarium/profile" "uiop")
+  :depends-on ("aquarium" "aquarium/form-edit" "aquarium/profile" "lisp-ai-tools/hook" "uiop")
   :serial t
-  :components ((:module "tests" :components ((:file "harness") (:file "aquarium-test") (:file "reset-test") (:file "shared-test"))))
+  :components ((:module "tests" :components ((:file "harness") (:file "aquarium-test") (:file "reset-test") (:file "server-test") (:file "shared-test"))))
   :perform (test-op (o c) (symbol-call :aquarium/tests :run)))

@@ -1,0 +1,3 @@
+#!/bin/sh
+# bin/guard -- Claude Code PreToolUse hook for Bash. The work is done by ../../tools/guard.
+exec "$(dirname "$0")/../../tools/guard" "$(cd "$(dirname "$0")/.." && pwd)"
