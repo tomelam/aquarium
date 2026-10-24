@@ -51,6 +51,10 @@ bin/lisp start               # the always-on image: it draws the tank and listen
 bin/demo                     # a new Emacs with the source, the tank and a REPL, connected to the image
 ```
 
+On a Mac whose Homebrew OpenSSL is version 4, Qlot's `cl+ssl` fails to load; the first install then needs
+`QLOT_SETUP_FILE=` naming `qlot-setup.lisp` from a checkout of lisp-ai-tools, which pins it to `openssl@3`. After that
+`bin/lisp qlot ...` passes the file itself.
+
 `bin/lisp eval '(form)'` evaluates in that image from the shell, which is how Claude works on it. `bin/lisp test` loads
 the files into a fresh SBCL and runs the suite. `bin/lisp stop` ends the image, and refuses while the image holds a
 definition no file has yet. The Slynk port is in `rules/slynk.sexp`; the demo's Emacs side is `demo.el`, which uses the
