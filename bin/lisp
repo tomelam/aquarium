@@ -1,8 +1,9 @@
 #!/bin/sh
-# bin/lisp WORD [ARGS...] -- the one way into this project's Lisp (eval, start, stop, status, test, guard, profile, qlot).
-# The work is done by the script `lisp` of the tools repo (github.com/tomelam/lisp-ai-tools), which Qlot installs inside this
-# project; .qlot/dists/lisp-ai-tools/distinfo.txt says which release is the current one. The name below is this project's
-# ASDF system. (Qlot drops the executable bit of the files it installs, so the script is run by sh.)
+# bin/lisp WORD [ARGS...] -- the one way into this project's Lisp: eval, start, stop, status, test, guard, qlot.
+# This file only hands WORD to the script `lisp` of the shared tools (github.com/tomelam/lisp-ai-tools), which Qlot installs
+# inside this project at .qlot/dists/lisp-ai-tools/software/lisp-ai-tools-ref-<commit>/lisp; distinfo.txt names the commit.
+# In that script each word is a shell function: start is start_server, which runs SBCL on bin/serve.lisp. The name on the
+# last line is this project's ASDF system. (Qlot drops the executable bit of the files it installs, so the script is run by sh.)
 cd "$(dirname "$0")/.." || exit 1
 dist=.qlot/dists/lisp-ai-tools
 while read -r key value; do [ "$key" = version: ] && version=${value#git-}; done < "$dist/distinfo.txt"

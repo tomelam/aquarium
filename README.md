@@ -74,10 +74,13 @@ you add it; `demo.el` brings its own copy, the one that matches the image, so a 
 In the clone:
 
 ```sh
-~/.qlot/bin/qlot install     # the dependencies, including the shared tools (see below)
-bin/lisp start               # the always-on image: it draws the tank and listens for Sly on 127.0.0.1:4007
-bin/demo                     # a new Emacs with the source, the tank and a REPL, connected to the image
+~/.qlot/bin/qlot install     # fetches the shared tools and the libraries into .qlot/; that is the whole install
+bin/lisp start               # starts SBCL and has it load bin/serve.lisp: the program, the tank loop, the two servers
+bin/demo                     # a new Emacs with the source, the tank and a REPL, connected to the running program
 ```
+
+That is all it takes. Nothing below has to be read to run the demo; ["How the pieces hand off"](#how-the-pieces-hand-off)
+is for when you want to know what those three commands did and where to look.
 
 On a Mac whose Homebrew OpenSSL is version 4, Qlot's `cl+ssl` fails to load; the first install then needs
 `QLOT_SETUP_FILE=` naming `qlot-setup.lisp` from a checkout of lisp-ai-tools, which pins it to `openssl@3`. After that
@@ -90,6 +93,38 @@ Sly checkout that the image's Slynk comes from, so the two match.
 
 To run the demo again from the start, evaluate `(reset-demo)` in the REPL: the source goes back to the first commit's
 file (kept in `demo/aquarium.lisp`), the image reloads it, and the tank gets its first four fish back.
+
+## How the pieces hand off
+
+The chain from a typed command to a fish on the screen, with the file and the function at each step, so that you know
+what to open and what to skip. Two files are this project's own and short: `bin/serve.lisp` (25 lines) and
+`src/aquarium.lisp`. The rest is plumbing shared with other projects, and you can leave it closed.
+
+1. **`bin/lisp start`.** `bin/lisp` is eight lines. It changes to the project directory and hands the word `start` to
+   the script `lisp` of the shared tools, which Qlot installed at
+   `.qlot/dists/lisp-ai-tools/software/lisp-ai-tools-ref-<commit>/lisp` (`distinfo.txt` in `.qlot/dists/lisp-ai-tools/`
+   names the commit). In that script each word is a shell function; `start` is `start_server`.
+2. **`start_server`** runs SBCL in the background through `qlot exec`, which makes the libraries in `.qlot/` visible to
+   it, with `--load bin/serve.lisp`, and waits until the socket answers. What SBCL prints goes to `run/lisp-server.log`.
+3. **`bin/serve.lisp`** is the whole start-up, in this project. `(asdf:load-system "aquarium")` compiles and loads the
+   files `aquarium.asd` names, in order, `src/package.lisp`, `src/aquarium.lisp`, `src/demo.lisp`, `src/server.lisp`,
+   `src/slynk-server.lisp`, and the shared tools they depend on. Then it calls three functions and waits forever:
+   - `start-slynk` in `src/slynk-server.lisp` opens Slynk, the door for Emacs, at the address in `rules/slynk.sexp`.
+   - `start-aquarium` in `src/aquarium.lisp` starts a thread that, once a second, moves each fish with `step-fish`,
+     draws the frame with `draw`, and writes it to `run/tank.txt`.
+   - `start-server` in `src/server.lisp` opens the Unix socket `run/lisp.sock`, the door for `bin/lisp eval` and for
+     Claude Code, and serves each connection in a thread of its own.
+4. **`bin/demo`** runs `open -na Emacs` with `demo.el`, whose command `aquarium-demo` lays out the three windows,
+   watches `src/aquarium.lisp` and `run/tank.txt` for changes on disk, and calls `sly-connect` with the port from
+   `rules/slynk.sexp`. From then on the REPL window talks to Slynk inside the running program. Typing `M-x sly` instead
+   would start a second, empty SBCL inside Emacs: not this one.
+5. **`bin/lisp eval '(form)'`** sends the text with `nc` to `run/lisp.sock`. In `src/server.lisp`, `serve-connection`
+   reads it and `handle-request` passes it to `eval-with-debugging`, shared code in the tools' `debug.lisp`, which reads
+   and evaluates each form in package `aquarium`, records every definition in the workbench's ledger, and writes the
+   values back down the socket. A hook payload from Claude Code takes the same road and is answered by the gate.
+
+So the program is `src/aquarium.lisp`; what starts it is `bin/serve.lisp`; the two doors are `src/server.lisp` and
+`src/slynk-server.lisp`; and everything typed at a shell goes through the one script `lisp`.
 
 ## The same thing, with no Emacs
 
