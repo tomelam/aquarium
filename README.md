@@ -150,7 +150,12 @@ through the image.
 All of that is shared code, the systems of [lisp-ai-tools](https://github.com/tomelam/lisp-ai-tools). The line
 `git lisp-ai-tools https://github.com/tomelam/lisp-ai-tools.git :branch master` in `qlfile` is what makes
 `qlot install` fetch it from GitHub, into `.qlot/` inside the project, at the commit `qlfile.lock` pins; no other
-step is needed. This project supplies what is its own: the tank
+step is needed. The files are at `.qlot/dists/lisp-ai-tools/software/lisp-ai-tools-ref-<commit>/`, and the comfortable
+way to read them is a clone of [github.com/tomelam/lisp-ai-tools](https://github.com/tomelam/lisp-ai-tools) checked out
+at the commit `.qlot/dists/lisp-ai-tools/distinfo.txt` names: the same files, and the tools repo's own README explains
+each one. The program itself answers where it loaded them from:
+`bin/lisp eval '(asdf:system-source-directory "lisp-ai-tools")'` prints that directory, which is Qlot's cache copy of
+the same commit under `~/.cache/qlot/`. This project supplies what is its own: the tank
 (`src/aquarium.lisp`), the socket server and the Slynk server, `bin/serve.lisp`, the demo and its reset, the tests,
 and the rules files.
 
