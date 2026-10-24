@@ -5,6 +5,18 @@ of one way of working: an always-on SBCL image is the program, a human and [Clau
 both talk to it, and the source file is written out from the image after a change has been seen to work, as forms,
 never edited as text.
 
+## Who this is for, in plain words
+
+Most programs are changed by editing a file, stopping the program, and starting it again. This one is never stopped.
+You change a definition inside the running program, see the effect at the next frame, and only then write the
+definition into the file, from the program. The file is a record of the program, not the other way round. The second
+point is that an AI assistant can work the same way: here, Claude Code makes its changes inside the running program
+and is refused any other route to the source files.
+
+You do not need to know Lisp to see the first point: [the terminal path](#the-same-thing-with-no-emacs) below takes
+two terminal windows and one pasted line. The second point can only be watched with Claude Code at the keyboard; a
+clone of this repository shows the program, not the assistant.
+
 ```
 +----------------------------------------+
 |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
@@ -40,10 +52,26 @@ side (`docs/script.md` has the full table):
 Meanwhile you can type in the REPL, which talks to the same image: `(add-fish *tank* "Zed" :x 10 :y 6 :dx 1)`,
 `(inspect *tank*)`, `(describe 'draw)`, or a `defun` of your own that turns every fish into a bubble.
 
+## Installing
+
+Three things, on a Mac with [Homebrew](https://brew.sh):
+
+```sh
+brew install sbcl openssl@3            # the Lisp, and the library Qlot's installer needs
+curl -L https://qlot.tech/installer | sh    # Qlot, into ~/.qlot (its own README: github.com/fukamachi/qlot)
+brew install --cask emacs              # Emacs.app, for the demo's editor side; the terminal path below needs none
+```
+
+Then clone this repository and, inside it, `~/.qlot/bin/qlot install`. That fetches the shared tools and the libraries
+into `.qlot/` and is the whole install.
+
+Tested on macOS 26 on Apple silicon with SBCL 2.6.9. An Intel Mac has not been tried: SBCL and Qlot both support
+x86-64, so it should work, but nobody has run it. Emacs comes with [Sly](https://github.com/joaotavora/sly) only if
+you add it; `demo.el` brings its own copy, the one that matches the image, so a plain Emacs is enough.
+
 ## Running it
 
-You need SBCL (developed on 2.6.9, macOS arm64), [Qlot](https://github.com/fukamachi/qlot), and Emacs with
-[Sly](https://github.com/joaotavora/sly) for the editor side. Then, in a clone:
+In the clone:
 
 ```sh
 ~/.qlot/bin/qlot install     # the dependencies, including the shared tools (see below)
@@ -62,6 +90,46 @@ Sly checkout that the image's Slynk comes from, so the two match.
 
 To run the demo again from the start, evaluate `(reset-demo)` in the REPL: the source goes back to the first commit's
 file (kept in `demo/aquarium.lisp`), the image reloads it, and the tank gets its first four fish back.
+
+## The same thing, with no Emacs
+
+Two terminal windows, both in the clone, after `bin/lisp start`. In the first, watch the tank:
+
+```sh
+while :; do clear; cat run/tank.txt; sleep 1; done
+```
+
+In the second, change the program while it runs. This defines the function that draws a fish, in the running image,
+so that every fish is a bubble:
+
+```sh
+bin/lisp eval '(defun fish-glyph (f) (if (plusp (fish-dx f)) "(o)" "(o)"))'
+```
+
+Within a second the first window shows `(o)` where the fish were, still swimming. Now look at the file:
+
+```sh
+git status
+```
+
+It prints nothing: `src/aquarium.lisp` is as it was. The change lives only in the running program, and the program
+knows it:
+
+```sh
+bin/lisp eval '(pending)'          # ((:DEFUN FISH-GLYPH "src/aquarium.lisp")): held by the image, not yet in the file
+bin/lisp stop                      # refuses: "lisp-server holds unsaved definitions: ("FISH-GLYPH")"
+```
+
+That refusal is the point. The file would be written from the program with `bin/lisp eval "(save 'fish-glyph)"`; to
+throw the bubbles away instead, put the file's definition back and forget the unsaved one:
+
+```sh
+bin/lisp eval '(load "src/aquarium.lisp")'
+bin/lisp eval "(drop 'fish-glyph)"
+bin/lisp stop                      # stops
+```
+
+The fish come back at the next frame. Everything the demo shows is this, with a larger change and an editor.
 
 ## How a change flows
 
@@ -82,7 +150,12 @@ through the image.
 All of that is shared code, the systems of [lisp-ai-tools](https://github.com/tomelam/lisp-ai-tools). The line
 `git lisp-ai-tools https://github.com/tomelam/lisp-ai-tools.git :branch master` in `qlfile` is what makes
 `qlot install` fetch it from GitHub, into `.qlot/` inside the project, at the commit `qlfile.lock` pins; no other
-step is needed. This project supplies what is its own: the tank
+step is needed. The files are at `.qlot/dists/lisp-ai-tools/software/lisp-ai-tools-ref-<commit>/`, and the comfortable
+way to read them is a clone of [github.com/tomelam/lisp-ai-tools](https://github.com/tomelam/lisp-ai-tools) checked out
+at the commit `.qlot/dists/lisp-ai-tools/distinfo.txt` names: the same files, and the tools repo's own README explains
+each one. The program itself answers where it loaded them from:
+`bin/lisp eval '(asdf:system-source-directory "lisp-ai-tools")'` prints that directory, which is Qlot's cache copy of
+the same commit under `~/.cache/qlot/`. This project supplies what is its own: the tank
 (`src/aquarium.lisp`), the socket server and the Slynk server, `bin/serve.lisp`, the demo and its reset, the tests,
 and the rules files.
 
