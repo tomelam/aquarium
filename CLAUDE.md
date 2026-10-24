@@ -6,7 +6,9 @@ the demo are in `docs/script.md`.
 
 ## Watching
 
-In a freshly started Emacs: `M-x load-file RET ~/lisp-ai/aquarium/demo.el RET`, then `M-x aquarium-demo`. The source is
+`bin/demo` starts a new Emacs process with the demo, whatever Emacs is already running (`open -n`, then `demo.el` and
+`M-x aquarium-demo`); by hand, in a freshly started Emacs: `M-x load-file RET ~/lisp-ai/aquarium/demo.el RET`, then
+`M-x aquarium-demo`. The source is
 on the left, the tank top right, a Sly REPL (in package `AQUARIUM`) below the tank. The source file is redrawn within
 half a second of changing on disk and the part that changed flashes; the tank is redrawn too, without a flash. `demo.el`
 does not touch `~/.emacs.d/init.el`.
