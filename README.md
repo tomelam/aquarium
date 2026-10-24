@@ -103,12 +103,17 @@ what to open and what to skip. Two files are this project's own and short: `bin/
 1. **`bin/lisp start`.** `bin/lisp` is eight lines. It changes to the project directory and hands the word `start` to
    the script `lisp` of the shared tools, which Qlot installed at
    `.qlot/dists/lisp-ai-tools/software/lisp-ai-tools-ref-<commit>/lisp` (`distinfo.txt` in `.qlot/dists/lisp-ai-tools/`
-   names the commit). In that script each word is a shell function; `start` is `start_server`.
-2. **`start_server`** runs SBCL in the background through `qlot exec`, which makes the libraries in `.qlot/` visible to
-   it, with `--load bin/serve.lisp`, and waits until the socket answers. What SBCL prints goes to `run/lisp-server.log`.
+   names the commit). In that script each word selects a shell function; the word `start` selects the function
+   `start_server`.
+2. **`start_server`**, that shell function, starts SBCL in the background with the option `--load bin/serve.lisp`. It
+   starts it through `qlot exec`, which makes the libraries in `.qlot/` visible to SBCL. The shell function then polls
+   `run/lisp.sock` until the new image answers a request, for up to 60 seconds, and prints `lisp-server started`. What
+   SBCL itself prints goes to `run/lisp-server.log`.
 3. **`bin/serve.lisp`** is the whole start-up, in this project. `(asdf:load-system "aquarium")` compiles and loads the
-   files `aquarium.asd` names, in order, `src/package.lisp`, `src/aquarium.lisp`, `src/demo.lisp`, `src/server.lisp`,
-   `src/slynk-server.lisp`, and the shared tools they depend on. Then it calls three functions and waits forever:
+   files `aquarium.asd` names, in this order: `src/package.lisp`, `src/aquarium.lisp`, `src/demo.lisp`,
+   `src/server.lisp`, `src/slynk-server.lisp`, with the shared tools they depend on loaded first. Then it calls three
+   functions, and finally waits on the thread of the third one with `join-thread`. That thread never ends, and the wait
+   is what keeps the process alive; the tank loop and Slynk run in threads of their own.
    - `start-slynk` in `src/slynk-server.lisp` opens Slynk, the door for Emacs, at the address in `rules/slynk.sexp`.
    - `start-aquarium` in `src/aquarium.lisp` starts a thread that, once a second, moves each fish with `step-fish`,
      draws the frame with `draw`, and writes it to `run/tank.txt`.
