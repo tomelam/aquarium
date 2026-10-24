@@ -79,8 +79,10 @@ values in the frame can be looked at and the function redefined before the reque
 Edit and Write tools on a Lisp file and text-processing programs used on one, so the only way to a source file is
 through the image.
 
-All of that is shared code, the systems of [lisp-ai-tools](https://github.com/tomelam/lisp-ai-tools), which Qlot
-installs inside the project at the commit `qlfile.lock` pins. This project supplies what is its own: the tank
+All of that is shared code, the systems of [lisp-ai-tools](https://github.com/tomelam/lisp-ai-tools). The line
+`git lisp-ai-tools https://github.com/tomelam/lisp-ai-tools.git :branch master` in `qlfile` is what makes
+`qlot install` fetch it from GitHub, into `.qlot/` inside the project, at the commit `qlfile.lock` pins; no other
+step is needed. This project supplies what is its own: the tank
 (`src/aquarium.lisp`), the socket server and the Slynk server, `bin/serve.lisp`, the demo and its reset, the tests,
 and the rules files.
 
