@@ -1,34 +1,37 @@
-# The aquarium demo: seven steps
+# The aquarium demo
 
-Claude makes one change at a time and says what to look at; nothing moves until Tom says "next". Every step was
-rehearsed in a scratch image on a copy of the source before the first one is shown.
+**To watch it:** `bin/demo`, then press SPACE as often as you like. That is all: `bin/demo` starts the program if it is
+not running, and the demo starts itself. `q` ends it at any point.
 
-**Before step 1 (Tom):** `M-x load-file RET ~/lisp-ai/aquarium/demo.el RET`, `M-x aquarium-demo`. Fish swim in the tank
-window. Do not edit the source buffer by hand during the demo: Emacs reverts it whenever Claude writes the file.
-**To start over at any time:** evaluate `(reset-demo)` in the REPL. The source window shows the starting file and the tank
-its first four fish; see "Replaying the demo" in `CLAUDE.md`.
+The screen: the program's source file on the left, with the captions below it; the tank top right; below the tank a
+prompt (a Sly REPL) connected to the same running program. Each caption says in plain words what the next SPACE will
+do, and then what to look at. Each step is sent to the running program through `bin/lisp eval`, the door Claude Code
+uses, so the request and the program's answer appear in the prompt window after `claude>`. When a step writes a
+definition into the file, the source window redraws and the definition flashes.
 
-| # | Claude does | Tom watches | Shows |
-|---|---|---|---|
-| 1 | `(add-fish *tank* "Eve" :x 5 :y 6 :dx 1)` through `bin/lisp eval` | A fifth fish appears in the tank within a second. The source window does not change. | The image holds state; a change to data is not a change to the file. In the REPL: `(length (tank-fish *tank*))` gives 5; `C-c I`, then `*tank*`, opens the Inspector. |
-| 2 | Redefines `fish-glyph` in the image only: bigger fish, `><(((*>` and `<*)))><` | Every fish changes shape at the next frame, and they turn at the wall one step sooner. The source window still shows the old `><>`. | The image is now ahead of the file. |
-| 3 | Writes that `fish-glyph` form into `src/aquarium.lisp` with `~/lisp-ai/tools/form-edit.lisp` | The source window redraws and the new `fish-glyph` flashes. Nothing else in the file moves. | The file is a record of the image, written as forms, not text search-and-replace. |
-| 4 | Redefines `step-fish` in the image: fish also drift up and down | The fish start wandering between rows. | A behaviour change, not just a look. |
-| 5 | Writes `step-fish` into the file | The source window redraws; `step-fish` flashes. | The same move as step 3. |
-| 6 | Redefines `step-fish` with a mistake (calls a function that does not exist) | The tank window shows `FRAME FAILED ... FISH-WOBBLE is undefined` instead of fish, and the image keeps running. Then Claude loads the saved file, and the fish come back. | A mistake while changing a live program is seen and repaired, not a crash. |
-| 7 | Asks the image: who calls `fish-glyph`, what `step-fish` is documented as, where each is defined | Text in the terminal; Tom can press `M-.` on `fish-glyph` in the source window. | Questions answered by the image, not by searching text. |
+What it shows, in eight steps: data added to the running program does not touch the file; a function changed in the
+running program changes it at once, with the file behind; the change is written into the file from the program, as a
+form, nothing else moving; a mistake is seen in the running program and repaired without stopping it; and the program
+answers questions about itself.
 
-## Things Tom can type in the REPL (the bottom right window) while waiting
+## What it does to the file
 
-The REPL talks to the same image Claude uses, so everything below shows up in the tank. Nothing here changes the file.
-If it goes wrong, Claude restarts the image (`bin/lisp stop`, then `start`).
+The demo begins by putting the starting source (`demo/aquarium.lisp`, the first commit's file) into
+`src/aquarium.lisp` and into the image (`reset-demo`), and the tank gets its first four fish. A whole run ends with
+`src/aquarium.lisp` exactly as committed. `q` half way puts it back as committed (`git restore`), loads it into the
+image, and forgets what the demo left unsaved. So nothing needs restoring by hand.
 
-- `*tank*` then `C-c I` (or `(inspect *tank*)`): the Inspector. Press Return on a link to go into a fish, `l` to go back.
-- `(add-fish *tank* "Zed" :x 10 :y 6 :dx 1)`: a fish appears within a second.
-- `(setf (fish-dx (first (tank-fish *tank*))) -1)`: Ada turns round.
-- `(describe 'draw)`, `(apropos "FISH")`, `(sb-introspect:who-calls 'fish-glyph)`: ask the image about itself.
-- Type `draw` and press `M-.`: Emacs jumps to its definition in `src/aquarium.lisp`; `M-,` comes back.
-- `(defun fish-glyph (f) (if (plusp (fish-dx f)) "(o)" "(o)"))`: every fish becomes a bubble, at the next frame. Claude's
-  step 2 replaces this definition, so say so before trying it.
+To keep that promise the demo refuses to start, and says why in the caption window, when `src/aquarium.lisp` has
+changes that are not committed or when the image holds definitions no file holds.
 
-**After:** everything shown is in `src/aquarium.lisp`. To run the demo again, see "Replaying the demo" in `CLAUDE.md`.
+## Changing the demo
+
+The steps are data: `demo/steps.sexp`, each a `:do` (what SPACE will do), `:send` (the requests, as text) and `:look`
+(what to look at afterwards), with `:intro` and `:end`. The Emacs side is `demo.el`. The texts of `fish-glyph` and
+`step-fish` in the steps must be those of `src/aquarium.lisp` byte for byte, or a whole run leaves the file changed.
+
+`tests/demo-test.el` checks the screen and then plays the whole demo, a stop half way, and the refusal, against the
+image of the project it sits in. Playing rewrites `src/aquarium.lisp`, so that part runs only in a clone (it prints
+`SKIP` in `~/lisp-ai/aquarium/`): clone, give the clone's `rules/slynk.sexp` a free port, `qlot install`, `bin/lisp
+start`, then `/opt/homebrew/bin/Emacs --batch -Q -l tests/demo-test.el`. On 2026-10-29: 49 checks passed; with one
+character of a step's text changed, the two "as committed" checks failed.

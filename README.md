@@ -33,8 +33,9 @@ tick 887   fish 4
 
 ## What the demo shows
 
-Seven steps, each one change made by Claude through the running image while you watch the tank and the source side by
-side (`docs/script.md` has the full table):
+Eight steps, each one change sent to the running image while you watch the tank and the source side by side. The demo
+makes the changes itself, as Claude Code would, and explains each one in plain words; you press SPACE for the next one
+(`docs/script.md` says more, and `demo/steps.sexp` holds the steps):
 
 1. A fifth fish is added to the tank. The source file does not change: state lives in the image.
 2. The fish glyph is redefined in the image only. Every fish changes shape at the next frame; the file still shows the
@@ -44,13 +45,13 @@ side (`docs/script.md` has the full table):
 4. The fish are taught to drift up and down, again in the image first.
 5. That definition is written to the file.
 6. A deliberate mistake: a redefinition that calls a function that does not exist. The tank shows
-   `FRAME FAILED ... FISH-WOBBLE is undefined` instead of fish, the image keeps running, and the saved file brings the
-   fish back. A mistake in a live program is seen and repaired, not a crash.
-7. The image is asked who calls what, what a function is documented as, and where each definition lives; `M-.` in
-   Emacs lands on it.
+   `FRAME FAILED ... FISH-WOBBLE is undefined` instead of fish, and the image keeps running.
+7. The broken definition is forgotten and the saved one taken back from the file: the fish return. A mistake in a live
+   program is seen and repaired, not a crash.
+8. The image is asked who calls what, what a function is documented as, and where a definition lives.
 
-Meanwhile you can type in the REPL, which talks to the same image: `(add-fish *tank* "Zed" :x 10 :y 6 :dx 1)`,
-`(inspect *tank*)`, `(describe 'draw)`, or a `defun` of your own that turns every fish into a bubble.
+At the end the source file is exactly as committed; `q` at any point ends the demo and puts it back. You can also type
+in the REPL, which talks to the same image, for example `(add-fish *tank* "Zed" :x 10 :y 6 :dx 1)`; nothing has to be.
 
 ## Installing
 
@@ -74,13 +75,13 @@ you add it; `demo.el` brings its own copy, the one that matches the image, so a 
 In the clone:
 
 ```sh
-~/.qlot/bin/qlot install     # fetches the shared tools and the libraries into .qlot/; that is the whole install
-bin/lisp start               # starts SBCL and has it load bin/serve.lisp: the program, the tank loop, the two servers
-bin/demo                     # a new Emacs with the source, the tank and a REPL, connected to the running program
+~/.qlot/bin/qlot install     # once: fetches the shared tools and the libraries into .qlot/; that is the whole install
+bin/demo                     # starts the program if it is not running, then a new Emacs with the demo; press SPACE
 ```
 
-That is all it takes. Nothing below has to be read to run the demo; ["How the pieces hand off"](#how-the-pieces-hand-off)
-is for when you want to know what those three commands did and where to look.
+That is all it takes: after `bin/demo` there is nothing to type, only SPACE for the next step and `q` to end. Nothing
+below has to be read to run the demo; ["How the pieces hand off"](#how-the-pieces-hand-off) is for when you want to
+know what those commands did and where to look.
 
 On a Mac whose Homebrew OpenSSL is version 4, Qlot's `cl+ssl` fails to load; the first install then needs
 `QLOT_SETUP_FILE=` naming `qlot-setup.lisp` from a checkout of lisp-ai-tools, which pins it to `openssl@3`. After that
@@ -91,8 +92,9 @@ the files into a fresh SBCL and runs the suite. `bin/lisp stop` ends the image, 
 definition no file has yet. The Slynk port is in `rules/slynk.sexp`; the demo's Emacs side is `demo.el`, which uses the
 Sly checkout that the image's Slynk comes from, so the two match.
 
-To run the demo again from the start, evaluate `(reset-demo)` in the REPL: the source goes back to the first commit's
-file (kept in `demo/aquarium.lisp`), the image reloads it, and the tank gets its first four fish back.
+The demo starts over by itself each time (SPACE after the last step runs it again): the source goes back to the first
+commit's file (kept in `demo/aquarium.lisp`), the image reloads it, and the tank gets its first four fish back. It
+refuses to start, and says why, when `src/aquarium.lisp` has changes that are not committed.
 
 ## How the pieces hand off
 
