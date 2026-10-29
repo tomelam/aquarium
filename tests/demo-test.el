@@ -9,7 +9,7 @@
 (add-hook 'sly-mrepl-mode-hook #'paredit-mode)
 (defconst demo-test-root (file-name-directory (directory-file-name (file-name-directory load-file-name))))
 (load-file (expand-file-name "demo.el" demo-test-root))
-(defun report (label ok) (princ (format "%s: %s\n" (if ok "PASS" "FAIL") label)))
+(defun report (label ok) (princ (format "%s: %s\n" (if ok "PASS" "FAIL") label)) ok)
 (defun wait-until (test &optional seconds)
   "Run TEST every tenth of a second, up to SECONDS (15 if nil); its last value."
   (let ((tries 0) (limit (* 10 (or seconds 15))))
@@ -113,9 +113,12 @@
                                                          (string-match-p "step 1 of 8" (demo-test-caption))))
   (demo-test-step)
   (report "step 1: a fifth fish" (string= (demo-test-lisp "(length (tank-fish *tank*))") "5"))
-  (report "and the echo shows the request in the REPL, after claude>"
-          (wait-until (lambda () (with-current-buffer "*sly-mrepl for sbcl*"
-                                   (string-match-p "claude>.*add-fish" (buffer-string)))) 5))
+  (unless (report "and the echo shows the request in the REPL, after claude>"
+                  (wait-until (lambda () (with-current-buffer "*sly-mrepl for sbcl*"
+                                           (string-match-p "claude>.*add-fish" (buffer-string)))) 5))
+    (princ (format "REPL buffer then:\n%s\nThe image's connections, and where the echo writes: %s\n"
+                   (with-current-buffer "*sly-mrepl for sbcl*" (buffer-string))
+                   (demo-test-lisp "(list (length slynk::*connections*) (mapcar (lambda (c) (list c (slynk::default-listener c) (ignore-errors (mapcar (function type-of) (slynk::connection-channels c))))) slynk::*connections*) (multiple-value-list (lisp-ai-echo::repl-target)))"))))
   (demo-test-step)
   (report "step 2: the image draws big fish" (string= (demo-test-lisp "(fish-glyph (make-fish :dx 1))") "\"><(((*>\""))
   (report "and the file still has the small ones" (string-match-p "\"><>\"" (demo-test-text "src/aquarium.lisp")))
