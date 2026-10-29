@@ -24,3 +24,7 @@
 (defun run-shared-script ()
   "The script behind bin/lisp: eval of a healthy server, of a server that is down, and of a start that fails."
   (incf *failures* (lisp-ai-script-tests:run (scratch-directory) #'aquarium:start-server #'aquarium:stop-server)))
+
+(defun run-shared-kit ()
+  "The kit (verify, write-command, run-command, source, revise), on a scratch project in run/."
+  (incf *failures* (lisp-ai-kit-tests:run (scratch-directory))))

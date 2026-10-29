@@ -8,8 +8,8 @@
 ;;; Qlot installs it, and the libraries it needs, where ASDF finds them. Nothing here says where a directory is.
 (defsystem "aquarium"
   :description "A tank of fish drawn as text, to be changed while it runs."
-  :depends-on ("sb-posix" "sb-bsd-sockets" "slynk" "uiop"
-               "lisp-ai-tools" "lisp-ai-tools/debug" "lisp-ai-tools/bench" "lisp-ai-tools/guard")
+  :depends-on ("sb-posix" "sb-bsd-sockets" "slynk" "uiop" "lisp-ai-tools" "lisp-ai-tools/debug" "lisp-ai-tools/bench"
+               "lisp-ai-tools/guard" "lisp-ai-tools/kit")
   :serial t
   :components ((:module "src" :components ((:file "package") (:file "aquarium") (:file "demo") (:file "server") (:file "slynk-server")))))
 

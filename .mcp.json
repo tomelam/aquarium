@@ -1,0 +1,5 @@
+{
+  "mcpServers": {
+    "lisp": {"command": "bin/lisp", "args": ["mcp"]}
+  }
+}
