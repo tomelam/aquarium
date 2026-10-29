@@ -97,7 +97,7 @@ file (kept in `demo/aquarium.lisp`), the image reloads it, and the tank gets its
 ## How the pieces hand off
 
 The chain from a typed command to a fish on the screen, with the file and the function at each step, so that you know
-what to open and what to skip. Two files are this project's own and short: `bin/serve.lisp` (25 lines) and
+what to open and what to skip. Two files are this project's own and short: `bin/serve.lisp` (28 lines) and
 `src/aquarium.lisp`. The rest is plumbing shared with other projects, and you can leave it closed.
 
 1. **`bin/lisp start`.** `bin/lisp` is eight lines. It changes to the project directory and hands the word `start` to
@@ -115,6 +115,8 @@ what to open and what to skip. Two files are this project's own and short: `bin/
    functions, and finally waits on the thread of the third one with `join-thread`. That thread never ends, and the wait
    is what keeps the process alive; the tank loop and Slynk run in threads of their own.
    - `start-slynk` in `src/slynk-server.lisp` opens Slynk, the door for Emacs, at the address in `rules/slynk.sexp`.
+     Then `lisp-ai-echo:start` (shared code) has every `bin/lisp eval` request and its reply written into the Sly REPL
+     after `claude>`, so whoever is attached sees what Claude sends.
    - `start-aquarium` in `src/aquarium.lisp` starts a thread that, once a second, moves each fish with `step-fish`,
      draws the frame with `draw`, and writes it to `run/tank.txt`.
    - `start-server` in `src/server.lisp` opens the Unix socket `run/lisp.sock`, the door for `bin/lisp eval` and for
@@ -129,7 +131,8 @@ what to open and what to skip. Two files are this project's own and short: `bin/
    values back down the socket. A hook payload from Claude Code takes the same road and is answered by the gate.
 
 So the program is `src/aquarium.lisp`; what starts it is `bin/serve.lisp`; the two doors are `src/server.lisp` and
-`src/slynk-server.lisp`; and everything typed at a shell goes through the one script `lisp`.
+`src/slynk-server.lisp`, in a package of their own, `aquarium/server`, so that nothing defined in `aquarium` can replace
+them; and everything typed at a shell goes through the one script `lisp`.
 
 ## The same thing, with no Emacs
 
@@ -157,7 +160,7 @@ knows it:
 
 ```sh
 bin/lisp eval '(pending)'          # ((:DEFUN FISH-GLYPH "src/aquarium.lisp")): held by the image, not yet in the file
-bin/lisp stop                      # refuses: "lisp-server holds unsaved definitions: ("FISH-GLYPH")"
+bin/lisp stop                      # refuses: "lisp-server holds definitions no file holds: ("FISH-GLYPH")"
 ```
 
 That refusal is the point. The file would be written from the program with `bin/lisp eval "(save 'fish-glyph)"`; to
@@ -199,12 +202,41 @@ the same commit under `~/.cache/qlot/`. This project supplies what is its own: t
 (`src/aquarium.lisp`), the socket server and the Slynk server, `bin/serve.lisp`, the demo and its reset, the tests,
 and the rules files.
 
+## What Claude uses here, with versions
+
+What a Claude Code session in this project has, beyond its usual tools, to program in Lisp the way the demo shows:
+
+| Piece | Where | What it gives Claude |
+| --- | --- | --- |
+| Instructions | `~/.claude/CLAUDE.md` (Tom's global rules), `~/lisp-ai/CLAUDE.md` (the Lisp method, for every project), `CLAUDE.md` here | Ask the image, change it, check it there, save from it; no text tools on Lisp; held errors; `revise`; checks with `verify`. A clone has only `CLAUDE.md` here and `~/lisp-ai/` on Tom's machine. |
+| The image | `bin/serve.lisp`, `run/lisp.sock` | One SBCL, started by the SessionStart hook, ticking the tank; Slynk at `rules/slynk.sexp`; a 4 GB heap (`rules/sbcl-runtime`). |
+| The MCP door | `.mcp.json` → `bin/lisp mcp` | The tool `eval`: Lisp text to the image through no shell. |
+| The gate | `.claude/settings.json` → `bin/lisp guard` on `Bash` and `Edit\|Write\|MultiEdit` | Refuses changing Lisp code as text and text tools on Lisp; denials in `run/gate.log`. |
+| lisp-ai-tools | `qlfile`, `qlfile.lock` | form-edit, held errors (`lisp-ai-debug`), the workbench (`pending`, `save`, `loose-definitions`, ...), the gate, the kit (`source`, `revise`, `verify`, `write-command`, `run-command`), the echo, and their tests. |
+| Libraries | `aquarium.asd` | alexandria, cl-ppcre, split-sequence, local-time, cl-csv, com.inuoe.jzon, as in the hackathon's Lisp workspace. |
+
+The tag `pre-hackathon-setup` (also `v0.1.0`) marks the project before it took the hackathon workspace's setup on
+2026-10-29.
+
+Versions, checked 2026-10-29; each one's home is the file named, or the machine:
+
+| What | Version | Its home |
+| --- | --- | --- |
+| lisp-ai-tools | `efb81bf` (2026-10-29) | `qlfile.lock` |
+| Quicklisp dist | `2026-01-01`: alexandria 1.0.1, cl-ppcre 2.1.2, split-sequence 2.0.1, local-time 1.0.6, cl-csv 1.0.7, com.inuoe.jzon 1.1.4, Eclector 0.12.0, Slynk | `qlfile`, `qlfile.lock` |
+| SBCL | 2.6.9, macOS 26.6.2 arm64 | the machine |
+| Qlot | 1.8.4 | `~/.qlot/` |
+| Sly | the dist's own checkout, loaded by `demo.el`; Tom's Emacs pins the same commit, `b01993cf` | `demo.el`, `~/.emacs.d/init.el` |
+| Emacs | 31.1 | the machine |
+| Claude Code | 2.1.308 | the machine |
+
 ## Layout
 
 | Path | What it is |
 | --- | --- |
 | `src/aquarium.lisp` | The tank: fish, stepping, drawing, the once-a-second loop. Its functions are declaimed `notinline`, so a live redefinition reaches callers compiled from the same file. |
-| `src/server.lisp`, `src/slynk-server.lisp` | The image's two doors: the Unix socket for `bin/lisp eval` and the hook, and Slynk for Emacs. |
+| `src/server.lisp`, `src/slynk-server.lisp` | The image's two doors, in the package `aquarium/server`: the Unix socket for `bin/lisp eval` and the hook, and Slynk for Emacs. |
+| `rules/sbcl-runtime` | The image's SBCL runtime options: a 4 GB heap. |
 | `src/demo.lisp` | `reset-demo`. |
 | `demo.el`, `bin/demo` | The Emacs side of the demo and the script that starts it in a new Emacs. |
 | `demo/aquarium.lisp` | The starting source, as the first commit had it. |

@@ -2,7 +2,7 @@
 ;;;; for the tree (code-as-data/docs/brief-image.md). Slynk has only TCP, so the interface in the rules is the whole of
 ;;;; the access control. It checks a secret only if ~/.sly-secret exists, and nothing here creates that file.
 
-(in-package :aquarium)
+(in-package :aquarium/server)
 
 (defun read-rules (name)
   "The list in rules/NAME.sexp."

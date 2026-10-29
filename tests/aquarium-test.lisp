@@ -64,8 +64,9 @@
          (when (probe-file temp) (delete-file temp))))
       (when (probe-file path) (delete-file path))))
   ;; the door for Claude
-  (check-equal "a form answers with its printed value" (aquarium::eval-request "(+ 1 2)") (format nil "3~%"))
-  (check "an error is a reply, not a dead server" (eql 0 (search "ERROR" (aquarium::eval-request "(error \"boom\")")))))
+  (check-equal "a form answers with its printed value" (aquarium/server::eval-request "(+ 1 2)") (format nil "3~%"))
+  (check "an error is a reply, not a dead server"
+   (eql 0 (search "ERROR" (aquarium/server::eval-request "(error \"boom\")")))))
 
 (defun run-redefinition-tests ()
   "The point of the aquarium: a function redefined while it runs changes what its callers do, even when the new one
