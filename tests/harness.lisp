@@ -36,7 +36,7 @@
       (run-reset-tests)
       (run-shared-form-edit)
       (run-shared-bench)
-      (progn (run-shared-script) (run-shared-kit))
+      (progn (run-shared-script) (run-shared-kit) (run-shared-echo))
       (progn (run-server-hook) (run-shared-guard))
       (if (zerop *failures*)
           (format t "all checks passed~%")

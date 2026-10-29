@@ -13,13 +13,16 @@
 (lisp-ai-bench:configure :project :aquarium)
 
 ;;; a port already taken must not stop the server coming up
-(handler-case (format t "Slynk listening on port ~d~%" (aquarium:start-slynk))
+(handler-case (format t "Slynk listening on port ~d~%" (aquarium/server:start-slynk))
   (error (e) (format t "Slynk NOT started: ~a~%" e)))
+
+;;; Every bin/lisp eval request and its reply are written into the Sly REPL after the prompt claude> (lisp-ai-tools/echo)
+(lisp-ai-echo:start)
 
 (aquarium:start-aquarium (namestring (asdf:system-relative-pathname :aquarium "run/tank.txt")))
 
-(let ((server (aquarium:start-server (namestring (asdf:system-relative-pathname :aquarium "run/lisp.sock")))))
+(let ((server (aquarium/server:start-server (namestring (asdf:system-relative-pathname :aquarium "run/lisp.sock")))))
   (with-open-file (out (asdf:system-relative-pathname :aquarium "run/lisp.pid")
                        :direction :output :if-exists :supersede)
     (format out "~d~%" (sb-posix:getpid)))
-  (sb-thread:join-thread (aquarium::server-thread server) :default nil))
+  (sb-thread:join-thread (aquarium/server:server-thread server) :default nil))

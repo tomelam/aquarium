@@ -1,6 +1,6 @@
 ;;;; The always-on image's door for Claude: a request is Lisp text, the reply is what it printed and its values, over a
 ;;;; Unix socket private to the user. Tom's door is Slynk (src/slynk-server.lisp).
-(in-package :aquarium)
+(in-package :aquarium/server)
 
 (defun read-all (stream)
   (with-output-to-string (text)

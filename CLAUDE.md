@@ -21,12 +21,19 @@ loaded in the Emacs, `demo.el` stops and says so: restart Emacs.
 ## The tools in `bin/`
 
 `bin/lisp` is the one way into this project's Lisp, for Claude and for Tom: the words `eval`, `start`, `stop`, `status`,
-`test`, `guard` and `qlot`. It is eight lines. The work is done by the script `lisp` of the tools repo
+`test`, `guard`, `mcp` and `qlot`. It is eight lines. The work is done by the script `lisp` of the tools repo
 (github.com/tomelam/lisp-ai-tools), which Qlot installs inside this project (`qlfile`, `qlfile.lock`); the name of this
 project's ASDF system, `aquarium`, is the one thing `bin/lisp` says, and nothing is found by the name of the directory.
 `~/lisp-ai/CLAUDE.md` explains the gateway and the tools. Only `bin/serve.lisp`, what this image does besides answering
 on `run/lisp.sock`, is the project's own: it loads the system `aquarium` (which brings the tools), sets `*package*`,
-makes the package `scratch` and starts the tank and the servers.
+makes the package `scratch` and starts Slynk, the echo (`(lisp-ai-echo:start)`: every request and its reply appear in
+Tom's Sly REPL after `claude>`), the tank and the socket server.
+
+The image's two doors, the socket server (`src/server.lisp`) and the Slynk starter (`src/slynk-server.lisp`), are in the
+package `aquarium/server` (defined in `src/package.lisp`, since 2026-10-29, as in the hackathon's Lisp workspace), so no
+name defined through `bin/lisp eval` in `aquarium` can replace a function of the server answering it. Requests are
+still read in `aquarium`. Their names are `aquarium/server:start-server` and so on. The image has a 4 GB heap
+(`rules/sbcl-runtime`).
 
 - `bin/lisp start|stop|status`: the always-on SBCL, which also ticks the tank and listens for Sly where
   `rules/slynk.sexp` says. The SessionStart hook in `.claude/settings.json` starts it. `stop` waits until the process
@@ -52,7 +59,9 @@ makes the package `scratch` and starts the tank and the servers.
 - The workbench and the gate are the same as in code-as-data, from the shared code of the tools repo
   (`~/lisp-ai/docs/workbench.md` says how a change flows). Lisp is changed in this image and saved from it: `(pending)`,
   `(save 'name :file "src/aquarium.lisp")`, `(save-all)`, `(run-tests)`, `(where 'name)`, `(drop 'name)`, `(new-file
-  ...)`, `(add-component ...)` through `bin/lisp eval`; `bin/lisp stop` refuses while anything is unsaved. The ledger's
+  ...)`, `(add-component ...)`, and `(loose-definitions)` (the functions of `aquarium` and `aquarium/tests` that the
+  image holds, no file holds and the ledger does not list: define such a one again at top level, then save it) through
+  `bin/lisp eval`; `bin/lisp stop` refuses while anything is unsaved or loose. The ledger's
   mirror is `run/pending.sexp`; `bin/serve.lisp` configures the workbench for `:aquarium`.
 - `bin/lisp guard` is the PreToolUse hook on Bash and on Edit, Write and MultiEdit (the logic is `guard.lisp` of the
   tools repo, system `lisp-ai-tools/guard`). It refuses Edit and MultiEdit of a Lisp file, Write over one, a shell
@@ -64,6 +73,13 @@ makes the package `scratch` and starts the tank and the servers.
 - The functions in `src/aquarium.lisp` are declaimed `notinline`. Without that, callers compiled from the file keep
   the return type the first definition had, and a redefinition that returns a longer string breaks them.
   `run-redefinition-tests` fails if the declaim goes.
+
+## Libraries and their idioms
+
+Loaded with the system since 2026-10-29, as in the hackathon's Lisp workspace: `alexandria`, `cl-ppcre`,
+`split-sequence`, `local-time`, `cl-csv`, `com.inuoe.jzon` (no nickname: `com.inuoe.jzon:stringify`). The idioms for
+them, each checked in an image of this tree on 2026-10-29 from the same Quicklisp dist, are in
+`~/lisp-ai/code-as-data/CLAUDE.md` ("Idioms") and, timed, in `~/hackathon/lisp/CLAUDE.md`.
 
 ## Replaying the demo
 

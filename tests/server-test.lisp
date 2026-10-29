@@ -19,7 +19,7 @@
   (format nil "{\"tool_name\":~s,\"tool_input\":{\"command\":~s}}" tool command))
 
 (defun run-server-hook ()
-  (let* ((path (format nil "/tmp/aquarium-test-~d.sock" (sb-posix:getpid))) (server (aquarium:start-server path)))
+  (let* ((path (format nil "/tmp/aquarium-test-~d.sock" (sb-posix:getpid))) (server (aquarium/server:start-server path)))
     (unwind-protect
         (progn
          (check-equal "a form is evaluated" (ask path "(* 6 7)") (format nil "42~%"))
@@ -30,4 +30,4 @@
            (check "and carries the deny decision" (search "\"permissionDecision\":\"deny\"" reply)))
          (check "a hook payload is answered, never read as Lisp and held"
           (not (search "HELD " (ask path (hook-json "Bash" "cat f.lisp"))))))
-      (aquarium:stop-server server))))
+      (aquarium/server:stop-server server))))
