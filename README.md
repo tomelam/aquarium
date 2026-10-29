@@ -224,7 +224,7 @@ Versions, checked 2026-10-29; each one's home is the file named, or the machine:
 
 | What | Version | Its home |
 | --- | --- | --- |
-| lisp-ai-tools | `efb81bf` (2026-10-29) | `qlfile.lock` |
+| lisp-ai-tools | `7b7a78b` (2026-10-29) | `qlfile.lock` |
 | Quicklisp dist | `2026-01-01`: alexandria 1.0.1, cl-ppcre 2.1.2, split-sequence 2.0.1, local-time 1.0.6, cl-csv 1.0.7, com.inuoe.jzon 1.1.4, Eclector 0.12.0, Slynk | `qlfile`, `qlfile.lock` |
 | SBCL | 2.6.9, macOS 26.6.2 arm64 | the machine |
 | Qlot | 1.8.4 | `~/.qlot/` |
