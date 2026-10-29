@@ -7,9 +7,9 @@ the demo are in `docs/script.md`.
 ## Watching
 
 `bin/demo` starts a new Emacs process with the demo, whatever Emacs is already running (`open -n`, then `demo.el` and
-`M-x aquarium-demo`); by hand, in a freshly started Emacs: `M-x load-file RET ~/lisp-ai/aquarium/demo.el RET`, then
-`M-x aquarium-demo`. The source is
-on the left, the tank top right, a Sly REPL (in package `AQUARIUM`) below the tank. The source file is redrawn within
+`M-x aquarium-demo`), and the demo starts itself: after that the viewer only presses SPACE (next step) or `q` (end).
+The steps are data, `demo/steps.sexp`; `docs/script.md` says what the demo does to the file and how to change it. The
+source is on the left above the captions, the tank top right, a Sly REPL (in package `AQUARIUM`) below the tank. The source file is redrawn within
 half a second of changing on disk and the part that changed flashes; the tank is redrawn too, without a flash. `demo.el`
 does not touch `~/.emacs.d/init.el`.
 
@@ -52,7 +52,8 @@ still read in `aquarium`. Their names are `aquarium/server:start-server` and so 
   leaving every other byte as it was. It can delete a form or a subform. Its tests run in `bin/lisp test`
   (`tests/shared-test.lisp`, which calls the shared tests of the system `lisp-ai-tools/tests`).
 - `bin/lisp test`: the arbiter. `tests/demo-test.el` is the check of `demo.el`, run by hand with Emacs in batch mode
-  while the image is up: `/opt/homebrew/bin/Emacs --batch -Q -l tests/demo-test.el`.
+  while the image is up: `/opt/homebrew/bin/Emacs --batch -Q -l tests/demo-test.el`. It plays the whole demo only in a
+  clone, on a free Slynk port (`docs/script.md`); in this directory it checks the screen and says `SKIP` for the rest.
 
 ## The workbench, the gate, and what is its own
 
@@ -83,8 +84,9 @@ them, each checked in an image of this tree on 2026-10-29 from the same Quicklis
 
 ## Replaying the demo
 
-`master` holds the result of the seven steps. The starting source (fish are `><>`) is `demo/aquarium.lisp`, the file as
-the first commit had it. To start over, evaluate `(reset-demo)` (in `src/demo.lisp`, package `aquarium`). It copies the
+`master` holds the result of the steps. The starting source (fish are `><>`) is `demo/aquarium.lisp`, the file as
+the first commit had it. The demo calls `(reset-demo)` itself when it starts, and puts the file back when it ends; by
+hand, `(reset-demo)` (in `src/demo.lisp`, package `aquarium`) does the same start. It copies the
 starting source over `src/aquarium.lisp`, loads that file into the image (so every definition the demo changed is the
 starting one, and `M-.` still finds its file), and gives the running tank its first four fish and tick 0, in place: the
 tank object stays. What the file held is first kept in `run/aquarium-before-reset-<date and time>.lisp`, unless it was

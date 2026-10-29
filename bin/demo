@@ -1,7 +1,9 @@
 #!/bin/sh
-# bin/demo -- start a new Emacs process running the aquarium demo (demo.el), whatever Emacs is already running.
-# A click on Emacs.app only raises the Emacs that is running; `open -n` starts another, and `--args` hands the rest to
-# Emacs itself: load demo.el, then run the command aquarium-demo. The demo needs an Emacs that has not loaded Sly yet,
-# because demo.el loads the Sly of the Qlot checkout the image's Slynk comes from. The image must be up: bin/lisp start.
+# bin/demo -- the one command of the aquarium demo: start the image if it is down, then a new Emacs process running the
+# demo (demo.el), whatever Emacs is already running. A click on Emacs.app only raises the Emacs that is running; `open -n`
+# starts another, and `--args` hands the rest to Emacs itself: load demo.el, then run the command aquarium-demo, which
+# starts the demo; the viewer then presses SPACE. The demo needs an Emacs that has not loaded Sly yet, because demo.el
+# loads the Sly of the Qlot checkout the image's Slynk comes from.
 project=$(cd "$(dirname "$0")/.." && pwd)
+"$project/bin/lisp" status >/dev/null 2>&1 || "$project/bin/lisp" start || exit 1
 exec open -na Emacs --args -l "$project/demo.el" -f aquarium-demo
