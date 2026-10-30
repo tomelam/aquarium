@@ -2,7 +2,8 @@
 
 A demo, so that Tom can watch the live-image method work: a tank of fish drawn as text once a second into
 `run/tank.txt`, in a running SBCL that Claude and Tom both change. The method is in `~/lisp-ai/CLAUDE.md`; the steps of
-the demo are in `docs/script.md`.
+the demo are in `docs/script.md`. Open items of this project are in `~/lisp-ai/NEXT.md` (its table "By repo", the row
+aquarium).
 
 ## Watching
 
