@@ -1,13 +1,14 @@
 ;;;; Loaded by bin/lisp start in the always-on image: load the system, listen for Claude on run/lisp.sock and for Sly where
 ;;;; rules/slynk.sexp says, start ticking the tank into run/tank.txt, never return.
 
-;;; A file whose compiling warns (a definition that clobbers another, a call with the wrong number of arguments) is
-;;; loaded as compiled, as the image had it, and its warnings printed to run/lisp-server.log; ASDF's default refuses it,
-;;; and then the image never came up, and with no image no file could be changed: the gate refuses Lisp edited as text
-;;; (2026-10-29, meter-feed in the hackathon's rerun chain 1; its fix, hackathon/lisp 88e5f86). bin/lisp test still
-;;; loads strictly, so such a file is still reported.
-(let ((uiop/lisp-build:*compile-file-failure-behaviour* :warn))
-  (asdf/operate:load-system "aquarium"))
+;;; The system is loaded by lisp-ai-project:load-for-image, so that the image comes up even when a file of it does not
+;;; load: with no image no file could be changed, since the gate refuses Lisp edited as text (the hackathon's rerun chains
+;;; of 2026-10-29 and 10-30). A file whose compiling warns is loaded as compiled, its warnings printed; a file that fails
+;;; is passed over and loaded once more after the rest; each that still fails is printed on a line that begins LOAD
+;;; FAILED, which bin/lisp start repeats. bin/lisp test still loads strictly, so such a file is still reported.
+(asdf/operate:load-system "lisp-ai-tools/project")
+
+(lisp-ai-project:load-for-image "aquarium")
 
 ;;; Sly's REPLs take the global value of *package*, so they start in the project's package and need no in-package.
 (setf (sb-ext:symbol-global-value '*package*) (find-package :aquarium))
