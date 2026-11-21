@@ -5,4 +5,4 @@
 ("lisp-ai-tools" .
  (:class qlot/source/git:source-git
   :initargs (:remote-url "https://github.com/tomelam/lisp-ai-tools.git" :branch "master")
-  :version "git-d94edb80085220ac8fcf88ecae101019218ce99e"))
+  :version "git-bc989943d8e257b3860b37589fd519bc7403bb17"))
