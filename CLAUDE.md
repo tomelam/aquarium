@@ -12,7 +12,8 @@ aquarium).
 The steps are data, `demo/steps.sexp`; `docs/script.md` says what the demo does to the file and how to change it. The
 source is on the left above the captions, the tank top right, a Sly REPL (in package `AQUARIUM`) below the tank. The source file is redrawn within
 half a second of changing on disk and the part that changed flashes; the tank is redrawn too, without a flash. `demo.el`
-does not touch `~/.emacs.d/init.el`.
+does not touch `~/.emacs.d/init.el`. After the image restarts, `M-x aquarium-demo-reconnect` connects Sly again, at
+the port in `rules/slynk.sexp`: it closes a connection left over and brings the REPL back into the demo's window.
 
 `demo.el` loads the Emacs half of Sly from the Qlot checkout the image's Slynk comes from, not from ELPA. The two
 differ: the checkout's Slynk sends the prompt as (package nickname level history-count [condition]), and ELPA's Sly
