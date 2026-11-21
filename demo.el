@@ -3,6 +3,7 @@
 ;; In a freshly started Emacs:  M-x load-file RET ~/lisp-ai/aquarium/demo.el RET   and then   M-x aquarium-demo
 ;; It sets up the screen: the source on the left; on the right the tank above a Sly REPL connected to the running image.
 ;; When the source file changes on disk, Emacs redraws it within half a second and flashes the part that changed.
+;; After the image is restarted, M-x aquarium-demo-reconnect connects the REPL again.
 ;; Nothing here touches ~/.emacs.d/init.el, and none of it outlasts the Emacs session.
 ;;
 ;; The Sly used here is the Emacs half of the very checkout the image's Slynk comes from (the Qlot cache), not the ELPA
@@ -304,6 +305,14 @@ the image. Then start the demo; SPACE in the caption window goes on."
     (if aquarium-demo-start-on-setup
         (aquarium-demo-start)
       (aquarium-demo--caption "The screen is set up; SPACE starts the demo."))))
+
+(defun aquarium-demo-reconnect ()
+  "Connect Sly to the image again, at the port rules/slynk.sexp gives: a restart of the image drops the connection.
+A connection left over is closed first, and the REPL comes back in the window the demo made for it."
+  (interactive)
+  (when (sly-connected-p) (sly-disconnect-all))
+  (when (window-live-p aquarium-demo--repl-window) (select-window aquarium-demo--repl-window))
+  (sly-connect "127.0.0.1" (aquarium-demo-port)))
 
 (defun aquarium-demo--back-to-caption ()
   "Once the REPL is up, give the keyboard back to the caption window, so that SPACE goes on with the demo."

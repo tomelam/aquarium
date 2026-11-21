@@ -165,6 +165,28 @@
                  (string-match-p "a change not committed" (demo-test-text "src/aquarium.lisp"))))
     (let ((default-directory demo-test-root)) (call-process "git" nil nil nil "restore" "--" "src/aquarium.lisp"))))
 
+;; Restarting the image drops Sly's connection, and aquarium-demo-reconnect makes it again: only in a clone, since it
+;; restarts the image
+(if (string= (file-truename demo-test-root) (file-truename "~/lisp-ai/aquarium/"))
+    (princ "SKIP: restarting the image and reconnecting: run this test in a clone\n")
+  (let ((default-directory demo-test-root))
+    (report "the image stops" (zerop (call-process "sh" nil nil nil "bin/lisp" "stop")))
+    (report "and Sly loses its connection" (wait-until (lambda () (not (sly-connected-p))) 10))
+    (report "the image starts again" (zerop (call-process "sh" nil nil nil "bin/lisp" "start")))
+    (aquarium-demo-reconnect)
+    ;; not sly-connected-p, which is true as soon as the new process exists: until the new connection is set up, Sly's
+    ;; current connection is still the closed one, and a request sent then fails with "Current connection ... is closed"
+    (report "aquarium-demo-reconnect connects Sly to it"
+            (wait-until (lambda () (let ((connection (ignore-errors (sly-connection))))
+                                     (and connection (eq (process-status connection) 'open))))))
+    (report "with one connection" (= 1 (length sly-net-processes)))
+    (report "and the new image answers: its package is AQUARIUM"
+            (equal (sly-eval '(cl:package-name cl:*package*)) "AQUARIUM"))
+    (report "the REPL is back in the window the demo made for it"
+            (wait-until (lambda () (and (window-live-p aquarium-demo--repl-window)
+                                        (string-prefix-p "*sly-mrepl"
+                                                         (buffer-name (window-buffer aquarium-demo--repl-window))))) 10))))
+
 ;; the exit status says what the lines say, so a FAIL is not seen only by reading them all
 (princ (if (zerop demo-test-failures) "all checks passed\n" (format "%d check(s) failed\n" demo-test-failures)))
 (kill-emacs (if (zerop demo-test-failures) 0 1))
