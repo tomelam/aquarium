@@ -169,18 +169,30 @@ internal to Slynk, so a Slynk update could change them; the Qlot lock file pins 
 5. **Slynk's backend functions as a library.** Built as proposed: `call-with-debugging-environment`, `compute-backtrace`,
    `print-frame`, `frame-locals`, `eval-in-frame`, `restart-frame`.
 
+## Tested on 2026-11-21
+
+In a clean clone of `aquarium` with tools branch `print-circle` (`e7cd353`), its own image, SBCL 2.6.10 arm64, each case
+once:
+
+- A circular argument. The frame line prints it with labels, `(CIRC-FAIL #1=(1 2 3 . #1#))`. But the value of
+  `(debug-locals ...)`, and any request whose value was circular, printed without end and killed the image (heap
+  exhausted, no reply, about 30 s); so did an error whose message held a circular value. Fixed on that branch: the
+  reply's values, the error's message and the restarts are printed with `*print-circle*`; the test `run-circular`
+  kills a test run without the fix and passes with it.
+- Two requests that fail after 2 s and one that succeeds after 1 s, sent together: two sessions with ids of their own,
+  and the third answered `:OK`.
+- The 300 s timeout itself: abandoned at 300 s, `(held session 8 abandoned after 300 s without a command)` then the
+  `ERROR:` line; the image answered afterwards.
+- A held thread that holds a lock: another request waiting 2 s for the lock got NIL; after `debug-abandon` it got it.
+- The code's own restart (`restart-case`), taken by `debug-invoke` after an error signalled by a trap: a type error, an
+  unbound variable, an undefined function, a wrong argument count. Each returned the restart's value, each reply had
+  the trap note, and the image answered 6 s after each; its log held no fatal error.
+- Cold starts: every clone test is one, and the move to SBCL 2.6.10 (2026-11-03) gave every image newly compiled files
+  under the `.asd`'s `debug 3`, so the note that the running image had functions at `debug 1` no longer holds.
+
 ## Not tested
 
-- Printing a frame whose arguments are large or circular (lines are cut at 200 characters and printed with a short
-  `*print-length*`; not tried on a circular argument).
-- Two `bin/lisp eval` calls overlapping while Claude's sandbox waits (each call is its own connection; tried one at a time).
-- The 300 s timeout itself (only 1 and 2 s were tried).
-- A held thread inside code that takes a lock (prototype only).
-- A cold start of the real images with all of this (the compiled files must be deleted once before it). Cold starts from
-  clean clones were made for both projects on 2026-10-20 and the tests and scenarios pass there. The running aquarium
-  image was loaded in place with the first version, so its functions compiled earlier are still at `debug 1`.
-- Whether leaving by a restart that the code itself establishes is safe after a trap error in every case (only the
-  abandon restart and a plain `throw` were tried).
+- Every case of a restart the code establishes, after a trap: the four kinds above were tried once each, on one SBCL.
 
 Tried on 2026-10-20 in the running image, in place: the whole scenario with scratch functions, and the tank kept ticking
 while a session was held (tick 72274, then 72277 three seconds later).
