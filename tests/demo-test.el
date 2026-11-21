@@ -174,7 +174,11 @@
     (report "and Sly loses its connection" (wait-until (lambda () (not (sly-connected-p))) 10))
     (report "the image starts again" (zerop (call-process "sh" nil nil nil "bin/lisp" "start")))
     (aquarium-demo-reconnect)
-    (report "aquarium-demo-reconnect connects Sly to it" (wait-until #'sly-connected-p))
+    ;; not sly-connected-p, which is true as soon as the new process exists: until the new connection is set up, Sly's
+    ;; current connection is still the closed one, and a request sent then fails with "Current connection ... is closed"
+    (report "aquarium-demo-reconnect connects Sly to it"
+            (wait-until (lambda () (let ((connection (ignore-errors (sly-connection))))
+                                     (and connection (eq (process-status connection) 'open))))))
     (report "with one connection" (= 1 (length sly-net-processes)))
     (report "and the new image answers: its package is AQUARIUM"
             (equal (sly-eval '(cl:package-name cl:*package*)) "AQUARIUM"))
