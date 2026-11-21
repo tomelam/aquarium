@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t -*-
 ;; A check of demo.el, run by hand with the image up:  /opt/homebrew/bin/Emacs --batch -Q -l tests/demo-test.el
-;; Prints one line per check. Needs the image running (bin/lisp start): it connects to it for real. It tests the demo.el
+;; Prints one line per check, then how many failed, and exits 1 when any did (0 when none did). Needs the image running (bin/lisp start): it connects to it for real. It tests the demo.el
 ;; beside it and that project's image, so a clone tests itself. Playing the demo rewrites src/aquarium.lisp and forgets
 ;; the image's ledger, so that part runs only in a clone (any directory but ~/lisp-ai/aquarium/), and says SKIP there.
 ;; paredit-mode in REPLs, added to the hook before demo.el is loaded, as ~/.emacs.d/init.el has it
@@ -9,7 +9,11 @@
 (add-hook 'sly-mrepl-mode-hook #'paredit-mode)
 (defconst demo-test-root (file-name-directory (directory-file-name (file-name-directory load-file-name))))
 (load-file (expand-file-name "demo.el" demo-test-root))
-(defun report (label ok) (princ (format "%s: %s\n" (if ok "PASS" "FAIL") label)) ok)
+(defvar demo-test-failures 0 "How many checks have failed so far.")
+(defun report (label ok)
+  (unless ok (setq demo-test-failures (1+ demo-test-failures)))
+  (princ (format "%s: %s\n" (if ok "PASS" "FAIL") label))
+  ok)
 (defun wait-until (test &optional seconds)
   "Run TEST every tenth of a second, up to SECONDS (15 if nil); its last value."
   (let ((tries 0) (limit (* 10 (or seconds 15))))
@@ -160,3 +164,7 @@
             (and (string-match-p "cannot start" (demo-test-caption))
                  (string-match-p "a change not committed" (demo-test-text "src/aquarium.lisp"))))
     (let ((default-directory demo-test-root)) (call-process "git" nil nil nil "restore" "--" "src/aquarium.lisp"))))
+
+;; the exit status says what the lines say, so a FAIL is not seen only by reading them all
+(princ (if (zerop demo-test-failures) "all checks passed\n" (format "%d check(s) failed\n" demo-test-failures)))
+(kill-emacs (if (zerop demo-test-failures) 0 1))
