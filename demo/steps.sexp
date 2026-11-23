@@ -3,8 +3,17 @@
 ;;; bin/lisp eval (the echo shows each one in the REPL after claude>), then shows the step's :look and the next step's :do.
 ;;; The texts of fish-glyph and step-fish are those of src/aquarium.lisp as committed, byte for byte, so a whole run
 ;;; leaves the file exactly as it was. Plain words: the reader may not know Lisp.
+;;; :file is the source the demo rewrites (it refuses to start while the file has changes not committed); :start puts
+;;; the demo at its beginning; :quit, after q half way and git restore of :file, takes the file back into the image,
+;;; forgets what the demo left unsaved and gives the tank its first fish again. lisp-ai-demo.el of the tools reads them.
 
-(:intro
+(:file "src/aquarium.lisp"
+
+ :start ("(reset-demo)")
+
+ :quit ("(progn (forget-all) (load \"src/aquarium.lisp\") (setf (tank-fish *tank*) (tank-fish (seed-tank)) (tank-tick *tank*) 0) :restored)")
+
+ :intro
  "This is a program that is running right now, and it will be changed while it runs.
 
 Top right: what the program draws, a tank of fish, once a second.
