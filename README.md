@@ -123,7 +123,7 @@ what to open and what to skip. Two files are this project's own and short: `bin/
      draws the frame with `draw`, and writes it to `run/tank.txt`.
    - `start-server` in `src/server.lisp` opens the Unix socket `run/lisp.sock`, the door for `bin/lisp eval` and for
      Claude Code, and serves each connection in a thread of its own.
-4. **`bin/demo`** runs `open -na Emacs` with `demo.el`, whose command `aquarium-demo` lays out the three windows,
+4. **`bin/demo`** runs `open -na Emacs` with `demo.el`, which loads the Emacs half of the tools and runs `lisp-ai-demo`: it lays out the windows,
    watches `src/aquarium.lisp` and `run/tank.txt` for changes on disk, and calls `sly-connect` with the port from
    `rules/slynk.sexp`. From then on the REPL window talks to Slynk inside the running program. Typing `M-x sly` instead
    would start a second, empty SBCL inside Emacs: not this one.
