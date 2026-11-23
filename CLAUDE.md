@@ -8,11 +8,12 @@ aquarium).
 ## Watching
 
 `bin/demo` starts a new Emacs process with the demo, whatever Emacs is already running (`open -n`, then `demo.el` and
-`M-x aquarium-demo`), and the demo starts itself: after that the viewer only presses SPACE (next step) or `q` (end).
+`M-x lisp-ai-demo`, from the Emacs half of the tools, which `demo.el` loads from the commit `qlfile.lock` pins and
+gives the layout), and the demo starts itself: after that the viewer only presses SPACE (next step) or `q` (end).
 The steps are data, `demo/steps.sexp`; `docs/script.md` says what the demo does to the file and how to change it. The
 source is on the left above the captions, the tank top right, a Sly REPL (in package `AQUARIUM`) below the tank. The source file is redrawn within
 half a second of changing on disk and the part that changed flashes; the tank is redrawn too, without a flash. `demo.el`
-does not touch `~/.emacs.d/init.el`. After the image restarts, `M-x aquarium-demo-reconnect` connects Sly again, at
+does not touch `~/.emacs.d/init.el`. After the image restarts, `M-x lisp-ai-reconnect` connects Sly again, at
 the port in `rules/slynk.sexp`: it closes a connection left over and brings the REPL back into the demo's window.
 
 `demo.el` loads the Emacs half of Sly from the Qlot checkout the image's Slynk comes from, not from ELPA. The two
